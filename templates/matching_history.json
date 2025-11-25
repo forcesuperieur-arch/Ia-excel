@@ -1,0 +1,2015 @@
+{
+  "corrections": [
+    {
+      "timestamp": "2025-11-24T17:23:54.044429",
+      "source": "uid",
+      "target": "référence",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.046814",
+      "source": "ean13",
+      "target": "code barre",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.049364",
+      "source": "nom",
+      "target": "libellé",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.050651",
+      "source": "prix_base",
+      "target": "prix achats nets motoblouz",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.052560",
+      "source": "prix_public",
+      "target": "prix ttc",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.053392",
+      "source": "description",
+      "target": "descriptif",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.054458",
+      "source": "catã©gorie",
+      "target": "catégorie",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:23:54.055385",
+      "source": "image",
+      "target": "image 1",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.107465",
+      "source": "uid",
+      "target": "référence",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.112495",
+      "source": "ean13",
+      "target": "code barre",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.114292",
+      "source": "nom",
+      "target": "libellé",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.115109",
+      "source": "prix_base",
+      "target": "prix achats nets motoblouz",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.116107",
+      "source": "prix_public",
+      "target": "prix ttc",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.118390",
+      "source": "description",
+      "target": "descriptif",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T17:32:32.121348",
+      "source": "image",
+      "target": "image 1",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.354241",
+      "source": "codice/item",
+      "target": "référence",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.354673",
+      "source": "ht public",
+      "target": "prix public ht",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.355037",
+      "source": "ttc public",
+      "target": "prix ttc",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.355407",
+      "source": "prix achat ht",
+      "target": "prix achats nets motoblouz",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.355810",
+      "source": "descrizione",
+      "target": "descriptif",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.356194",
+      "source": "categoria",
+      "target": "catégorie",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.356587",
+      "source": "colore",
+      "target": "couleur",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:38:04.357027",
+      "source": "immagine",
+      "target": "image 1",
+      "template": "Template catalogue Motoblouz",
+      "confidence_before": 0.0
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.030913",
+      "source": "référence",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.030949",
+      "source": "réf",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.030975",
+      "source": "code produit",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.030998",
+      "source": "code article",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031020",
+      "source": "ean",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031051",
+      "source": "code barre",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031074",
+      "source": "upc",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031101",
+      "source": "libellé",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031127",
+      "source": "titre",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031151",
+      "source": "désignation",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031187",
+      "source": "descriptif",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031212",
+      "source": "desc",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031246",
+      "source": "prix achat",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031288",
+      "source": "prix fournisseur",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031312",
+      "source": "prix public ht",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031339",
+      "source": "prix ht",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031370",
+      "source": "prix ttc",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031395",
+      "source": "prix public ttc",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031430",
+      "source": "catégorie",
+      "target": "catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031459",
+      "source": "cat",
+      "target": "catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031506",
+      "source": "rubrique",
+      "target": "catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031533",
+      "source": "sous-catégorie",
+      "target": "sous-catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031563",
+      "source": "sous-cat",
+      "target": "sous-catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031590",
+      "source": "marque",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031624",
+      "source": "fabricant",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031652",
+      "source": "couleur",
+      "target": "couleur",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031688",
+      "source": "coloris",
+      "target": "couleur",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031718",
+      "source": "taille",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031754",
+      "source": "dimension",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031783",
+      "source": "poids",
+      "target": "poids",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031815",
+      "source": "stock",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031844",
+      "source": "disponibilité",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031878",
+      "source": "dispo",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031914",
+      "source": "photo",
+      "target": "image 1",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.031942",
+      "source": "img",
+      "target": "image 1",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "français"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032000",
+      "source": "codice",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032033",
+      "source": "codice articolo",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032068",
+      "source": "codice prodotto",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032102",
+      "source": "item",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032139",
+      "source": "codice a barre",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032177",
+      "source": "denominazione",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032210",
+      "source": "nome",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032248",
+      "source": "titolo",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032304",
+      "source": "descrizione completa",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032351",
+      "source": "prezzo acquisto",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032384",
+      "source": "prezzo di acquisto",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032418",
+      "source": "prezzo pubblico",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032452",
+      "source": "prezzo pubblico iva inclusa",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032507",
+      "source": "prezzo lordo",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032545",
+      "source": "prezzo netto",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032589",
+      "source": "categoria principale",
+      "target": "catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032623",
+      "source": "sottocategoria",
+      "target": "sous-catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032660",
+      "source": "marca",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032699",
+      "source": "marchio",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032747",
+      "source": "taglia",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032787",
+      "source": "dimensione",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032825",
+      "source": "peso",
+      "target": "poids",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032866",
+      "source": "disponibilità",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032909",
+      "source": "magazzino",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.032967",
+      "source": "foto",
+      "target": "image 1",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "italien"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033025",
+      "source": "codigo",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033065",
+      "source": "codigo producto",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033108",
+      "source": "codigo articulo",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033155",
+      "source": "referencia",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033204",
+      "source": "codigo de barras",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033258",
+      "source": "nombre",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033301",
+      "source": "titulo",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033362",
+      "source": "denominacion",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033404",
+      "source": "descripcion",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033447",
+      "source": "descripcion completa",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033508",
+      "source": "precio compra",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033553",
+      "source": "precio de compra",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033596",
+      "source": "precio publico",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033644",
+      "source": "precio con iva",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033688",
+      "source": "precio sin iva",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033737",
+      "source": "precio neto",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033788",
+      "source": "subcategoria",
+      "target": "sous-catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033833",
+      "source": "fabricante",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033895",
+      "source": "color",
+      "target": "couleur",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033944",
+      "source": "tamano",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.033989",
+      "source": "talla",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034060",
+      "source": "disponibilidad",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034104",
+      "source": "en stock",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034149",
+      "source": "imagen",
+      "target": "image 1",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "espagnol"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034263",
+      "source": "reference",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034310",
+      "source": "ref",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034357",
+      "source": "product code",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034409",
+      "source": "item code",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034455",
+      "source": "sku",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034514",
+      "source": "barcode",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034576",
+      "source": "label",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034621",
+      "source": "name",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034671",
+      "source": "title",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034719",
+      "source": "product name",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034768",
+      "source": "full description",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034815",
+      "source": "purchase price",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034861",
+      "source": "buying price",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034929",
+      "source": "cost price",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.034977",
+      "source": "public price",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035024",
+      "source": "retail price",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035071",
+      "source": "price incl vat",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035118",
+      "source": "price excl vat",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035166",
+      "source": "net price",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035214",
+      "source": "category",
+      "target": "catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035262",
+      "source": "subcategory",
+      "target": "sous-catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035317",
+      "source": "brand",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035371",
+      "source": "manufacturer",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035436",
+      "source": "colour",
+      "target": "couleur",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035501",
+      "source": "size",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035552",
+      "source": "weight",
+      "target": "poids",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035614",
+      "source": "availability",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035663",
+      "source": "available",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035717",
+      "source": "picture",
+      "target": "image 1",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "anglais"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035802",
+      "source": "artikel",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035860",
+      "source": "artikel-nr",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035912",
+      "source": "artikelnummer",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.035970",
+      "source": "produkt-code",
+      "target": "référence",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036032",
+      "source": "strichcode",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036139",
+      "source": "produktname",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036198",
+      "source": "bezeichnung",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036259",
+      "source": "titel",
+      "target": "libellé",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036323",
+      "source": "beschreibung",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036380",
+      "source": "vollständige beschreibung",
+      "target": "descriptif",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036435",
+      "source": "einkaufspreis",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036511",
+      "source": "bezugspreis",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036567",
+      "source": "verkaufspreis",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036628",
+      "source": "bruttopreis",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036696",
+      "source": "preis inkl mwst",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036761",
+      "source": "nettopreis",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036824",
+      "source": "preis ohne mwst",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036887",
+      "source": "kategorie",
+      "target": "catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.036951",
+      "source": "unterkategorie",
+      "target": "sous-catégorie",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037017",
+      "source": "hersteller",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037083",
+      "source": "marke",
+      "target": "marque",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037144",
+      "source": "farbe",
+      "target": "couleur",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037207",
+      "source": "grosse",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037271",
+      "source": "größe",
+      "target": "taille",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037334",
+      "source": "gewicht",
+      "target": "poids",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037402",
+      "source": "lagerbestand",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037461",
+      "source": "verfügbarkeit",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037526",
+      "source": "bild",
+      "target": "image 1",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "allemand"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037651",
+      "source": "prix.achat.ht",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "variations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037716",
+      "source": "prixachatht",
+      "target": "prix achats nets motoblouz",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "variations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037800",
+      "source": "codebarre",
+      "target": "code barre",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "variations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037886",
+      "source": "prixttc",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "variations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.037974",
+      "source": "prixpublic",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "variations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.038206",
+      "source": "ht",
+      "target": "prix public ht",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "abréviations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.038295",
+      "source": "ttc",
+      "target": "prix ttc",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "abréviations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.038362",
+      "source": "qté",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "abréviations"
+    },
+    {
+      "timestamp": "2025-11-24T18:51:28.038424",
+      "source": "qty",
+      "target": "stock",
+      "template": "Auto-learning",
+      "confidence_before": 0.0,
+      "training": true,
+      "language": "abréviations"
+    }
+  ],
+  "patterns": {
+    "uid": [
+      "Référence"
+    ],
+    "ean13": [
+      "Code barre"
+    ],
+    "nom": [
+      "Libellé"
+    ],
+    "prix base": [
+      "Prix achats nets Motoblouz"
+    ],
+    "prix public": [
+      "Prix TTC"
+    ],
+    "description": [
+      "Descriptif"
+    ],
+    "catã©gorie": [
+      "Catégorie"
+    ],
+    "image": [
+      "Image 1"
+    ],
+    "codice/item": [
+      "Référence"
+    ],
+    "ht public": [
+      "Prix public HT"
+    ],
+    "ttc public": [
+      "Prix TTC"
+    ],
+    "prix achat ht": [
+      "Prix achats nets Motoblouz"
+    ],
+    "descrizione": [
+      "Descriptif"
+    ],
+    "categoria": [
+      "Catégorie"
+    ],
+    "colore": [
+      "Couleur"
+    ],
+    "immagine": [
+      "Image 1"
+    ],
+    "référence": [
+      "référence"
+    ],
+    "réf": [
+      "référence"
+    ],
+    "code produit": [
+      "référence"
+    ],
+    "code article": [
+      "référence"
+    ],
+    "ean": [
+      "code barre"
+    ],
+    "code barre": [
+      "code barre"
+    ],
+    "upc": [
+      "code barre"
+    ],
+    "libellé": [
+      "libellé"
+    ],
+    "titre": [
+      "libellé"
+    ],
+    "désignation": [
+      "libellé"
+    ],
+    "descriptif": [
+      "descriptif"
+    ],
+    "desc": [
+      "descriptif"
+    ],
+    "prix achat": [
+      "prix achats nets motoblouz"
+    ],
+    "prix fournisseur": [
+      "prix achats nets motoblouz"
+    ],
+    "prix public ht": [
+      "prix public ht"
+    ],
+    "prix ht": [
+      "prix public ht"
+    ],
+    "prix ttc": [
+      "prix ttc"
+    ],
+    "prix public ttc": [
+      "prix ttc"
+    ],
+    "catégorie": [
+      "catégorie"
+    ],
+    "cat": [
+      "catégorie"
+    ],
+    "rubrique": [
+      "catégorie"
+    ],
+    "sous catégorie": [
+      "sous-catégorie"
+    ],
+    "sous cat": [
+      "sous-catégorie"
+    ],
+    "marque": [
+      "marque"
+    ],
+    "fabricant": [
+      "marque"
+    ],
+    "couleur": [
+      "couleur"
+    ],
+    "coloris": [
+      "couleur"
+    ],
+    "taille": [
+      "taille"
+    ],
+    "dimension": [
+      "taille"
+    ],
+    "poids": [
+      "poids"
+    ],
+    "stock": [
+      "stock"
+    ],
+    "disponibilité": [
+      "stock"
+    ],
+    "dispo": [
+      "stock"
+    ],
+    "photo": [
+      "image 1"
+    ],
+    "img": [
+      "image 1"
+    ],
+    "codice": [
+      "référence"
+    ],
+    "codice articolo": [
+      "référence"
+    ],
+    "codice prodotto": [
+      "référence"
+    ],
+    "item": [
+      "référence"
+    ],
+    "codice a barre": [
+      "code barre"
+    ],
+    "denominazione": [
+      "libellé"
+    ],
+    "nome": [
+      "libellé"
+    ],
+    "titolo": [
+      "libellé"
+    ],
+    "descrizione completa": [
+      "descriptif"
+    ],
+    "prezzo acquisto": [
+      "prix achats nets motoblouz"
+    ],
+    "prezzo di acquisto": [
+      "prix achats nets motoblouz"
+    ],
+    "prezzo pubblico": [
+      "prix ttc"
+    ],
+    "prezzo pubblico iva inclusa": [
+      "prix ttc"
+    ],
+    "prezzo lordo": [
+      "prix ttc"
+    ],
+    "prezzo netto": [
+      "prix public ht"
+    ],
+    "categoria principale": [
+      "catégorie"
+    ],
+    "sottocategoria": [
+      "sous-catégorie"
+    ],
+    "marca": [
+      "marque"
+    ],
+    "marchio": [
+      "marque"
+    ],
+    "taglia": [
+      "taille"
+    ],
+    "dimensione": [
+      "taille"
+    ],
+    "peso": [
+      "poids"
+    ],
+    "disponibilità": [
+      "stock"
+    ],
+    "magazzino": [
+      "stock"
+    ],
+    "foto": [
+      "image 1"
+    ],
+    "codigo": [
+      "référence"
+    ],
+    "codigo producto": [
+      "référence"
+    ],
+    "codigo articulo": [
+      "référence"
+    ],
+    "referencia": [
+      "référence"
+    ],
+    "codigo de barras": [
+      "code barre"
+    ],
+    "nombre": [
+      "libellé"
+    ],
+    "titulo": [
+      "libellé"
+    ],
+    "denominacion": [
+      "libellé"
+    ],
+    "descripcion": [
+      "descriptif"
+    ],
+    "descripcion completa": [
+      "descriptif"
+    ],
+    "precio compra": [
+      "prix achats nets motoblouz"
+    ],
+    "precio de compra": [
+      "prix achats nets motoblouz"
+    ],
+    "precio publico": [
+      "prix ttc"
+    ],
+    "precio con iva": [
+      "prix ttc"
+    ],
+    "precio sin iva": [
+      "prix public ht"
+    ],
+    "precio neto": [
+      "prix public ht"
+    ],
+    "subcategoria": [
+      "sous-catégorie"
+    ],
+    "fabricante": [
+      "marque"
+    ],
+    "color": [
+      "couleur"
+    ],
+    "tamano": [
+      "taille"
+    ],
+    "talla": [
+      "taille"
+    ],
+    "disponibilidad": [
+      "stock"
+    ],
+    "en stock": [
+      "stock"
+    ],
+    "imagen": [
+      "image 1"
+    ],
+    "reference": [
+      "référence"
+    ],
+    "ref": [
+      "référence"
+    ],
+    "product code": [
+      "référence"
+    ],
+    "item code": [
+      "référence"
+    ],
+    "sku": [
+      "référence"
+    ],
+    "barcode": [
+      "code barre"
+    ],
+    "label": [
+      "libellé"
+    ],
+    "name": [
+      "libellé"
+    ],
+    "title": [
+      "libellé"
+    ],
+    "product name": [
+      "libellé"
+    ],
+    "full description": [
+      "descriptif"
+    ],
+    "purchase price": [
+      "prix achats nets motoblouz"
+    ],
+    "buying price": [
+      "prix achats nets motoblouz"
+    ],
+    "cost price": [
+      "prix achats nets motoblouz"
+    ],
+    "public price": [
+      "prix ttc"
+    ],
+    "retail price": [
+      "prix ttc"
+    ],
+    "price incl vat": [
+      "prix ttc"
+    ],
+    "price excl vat": [
+      "prix public ht"
+    ],
+    "net price": [
+      "prix public ht"
+    ],
+    "category": [
+      "catégorie"
+    ],
+    "subcategory": [
+      "sous-catégorie"
+    ],
+    "brand": [
+      "marque"
+    ],
+    "manufacturer": [
+      "marque"
+    ],
+    "colour": [
+      "couleur"
+    ],
+    "size": [
+      "taille"
+    ],
+    "weight": [
+      "poids"
+    ],
+    "availability": [
+      "stock"
+    ],
+    "available": [
+      "stock"
+    ],
+    "picture": [
+      "image 1"
+    ],
+    "artikel": [
+      "référence"
+    ],
+    "artikel nr": [
+      "référence"
+    ],
+    "artikelnummer": [
+      "référence"
+    ],
+    "produkt code": [
+      "référence"
+    ],
+    "strichcode": [
+      "code barre"
+    ],
+    "produktname": [
+      "libellé"
+    ],
+    "bezeichnung": [
+      "libellé"
+    ],
+    "titel": [
+      "libellé"
+    ],
+    "beschreibung": [
+      "descriptif"
+    ],
+    "vollständige beschreibung": [
+      "descriptif"
+    ],
+    "einkaufspreis": [
+      "prix achats nets motoblouz"
+    ],
+    "bezugspreis": [
+      "prix achats nets motoblouz"
+    ],
+    "verkaufspreis": [
+      "prix ttc"
+    ],
+    "bruttopreis": [
+      "prix ttc"
+    ],
+    "preis inkl mwst": [
+      "prix ttc"
+    ],
+    "nettopreis": [
+      "prix public ht"
+    ],
+    "preis ohne mwst": [
+      "prix public ht"
+    ],
+    "kategorie": [
+      "catégorie"
+    ],
+    "unterkategorie": [
+      "sous-catégorie"
+    ],
+    "hersteller": [
+      "marque"
+    ],
+    "marke": [
+      "marque"
+    ],
+    "farbe": [
+      "couleur"
+    ],
+    "grosse": [
+      "taille"
+    ],
+    "größe": [
+      "taille"
+    ],
+    "gewicht": [
+      "poids"
+    ],
+    "lagerbestand": [
+      "stock"
+    ],
+    "verfügbarkeit": [
+      "stock"
+    ],
+    "bild": [
+      "image 1"
+    ],
+    "prix.achat.ht": [
+      "prix achats nets motoblouz"
+    ],
+    "prixachatht": [
+      "prix achats nets motoblouz"
+    ],
+    "codebarre": [
+      "code barre"
+    ],
+    "prixttc": [
+      "prix ttc"
+    ],
+    "prixpublic": [
+      "prix public ht"
+    ],
+    "ht": [
+      "prix public ht"
+    ],
+    "ttc": [
+      "prix ttc"
+    ],
+    "qté": [
+      "stock"
+    ],
+    "qty": [
+      "stock"
+    ]
+  }
+}

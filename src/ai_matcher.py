@@ -1,0 +1,360 @@
+"""
+Module de matching intelligent des colonnes Excel avec IA locale
+"""
+import json
+import os
+from pathlib import Path
+from typing import List, Dict, Optional, Tuple
+import numpy as np
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
+from dotenv import load_dotenv
+from .column_normalizer import ColumnNormalizer
+
+load_dotenv()
+
+
+class ColumnMatcher:
+    """Utilise une IA locale (sentence-transformers) pour matcher les colonnes"""
+    
+    def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2"):
+        """
+        Initialise le matcher avec un modèle local multilingue
+        
+        Args:
+            model_name: Nom du modèle sentence-transformers à utiliser
+        """
+        print(f"🔄 Chargement du modèle IA local: {model_name}")
+        self.model = SentenceTransformer(model_name)
+        self.normalizer = ColumnNormalizer()
+        
+        # Fichier d'apprentissage pour stocker les correspondances validées
+        self.learning_file = Path("learning_data.json")
+        self.learned_mappings = self._load_learning_data()
+        
+    def _load_learning_data(self) -> Dict:
+        """Charge les données d'apprentissage depuis le fichier JSON"""
+        if self.learning_file.exists():
+            try:
+                with open(self.learning_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"⚠️ Erreur chargement apprentissage: {e}")
+                return {}
+        return {}
+    
+    def _save_learning_data(self):
+        """Sauvegarde les données d'apprentissage"""
+        try:
+            with open(self.learning_file, 'w', encoding='utf-8') as f:
+                json.dump(self.learned_mappings, f, ensure_ascii=False, indent=2)
+            print(f"✓ Apprentissage sauvegardé dans {self.learning_file}")
+        except Exception as e:
+            print(f"✗ Erreur sauvegarde apprentissage: {e}")
+    
+    def learn_mapping(self, source_column: str, target_column: str, catalog_context: str = ""):
+        """
+        Apprend une correspondance validée par l'utilisateur
+        
+        Args:
+            source_column: Nom de la colonne source
+            target_column: Nom de la colonne cible
+            catalog_context: Contexte optionnel (nom du catalogue)
+        """
+        key = self.normalizer._normalize(source_column)
+        
+        if key not in self.learned_mappings:
+            self.learned_mappings[key] = []
+        
+        # Ajoute la correspondance
+        self.learned_mappings[key].append({
+            "source": source_column,
+            "target": target_column,
+            "context": catalog_context,
+            "normalized_target": self.normalizer._normalize(target_column)
+        })
+        
+        self._save_learning_data()
+        print(f"✓ Apprentissage: '{source_column}' → '{target_column}'")
+    
+    def _compute_similarity(self, text1: str, text2: str) -> float:
+        """Calcule la similarité sémantique entre deux textes"""
+        # Embeddings
+        emb1 = self.model.encode([text1])
+        emb2 = self.model.encode([text2])
+        
+        # Similarité cosine
+        similarity = cosine_similarity(emb1, emb2)[0][0]
+        return float(similarity)
+    
+    def _check_learned_mapping(self, source_column: str, target_columns: List[str]) -> Optional[Tuple[str, float]]:
+        """Vérifie si une correspondance a été apprise"""
+        key = self.normalizer._normalize(source_column)
+        
+        if key in self.learned_mappings:
+            for learned in self.learned_mappings[key]:
+                # Cherche si la cible correspond à une des colonnes recherchées
+                for target in target_columns:
+                    if self.normalizer._normalize(target) == learned["normalized_target"]:
+                        return (target, 1.0)  # Confiance maximale pour apprentissage
+        
+        return None
+    
+    def identify_columns(
+        self, 
+        column_headers: List[str],
+        target_columns: List[str],
+        min_confidence: float = 0.6
+    ) -> Dict[str, Optional[str]]:
+        """
+        Identifie et mappe les colonnes du catalogue vers les colonnes cibles
+        
+        Args:
+            column_headers: Liste des en-têtes de colonnes du catalogue fournisseur
+            target_columns: Liste des colonnes cibles recherchées
+            min_confidence: Score minimal de confiance
+            
+        Returns:
+            Dict mappant chaque colonne cible vers le nom de colonne trouvé
+        """
+        mapping = {}
+        
+        # Enrichir les colonnes avec des variantes multilingues
+        target_variants = self._generate_multilingual_variants(target_columns)
+        
+        for target in target_columns:
+            best_match = None
+            best_score = min_confidence
+            
+            # Cherche dans l'apprentissage d'abord
+            for source in column_headers:
+                learned = self._check_learned_mapping(source, [target])
+                if learned:
+                    best_match = source
+                    best_score = learned[1]
+                    break
+            
+            # Si pas trouvé dans l'apprentissage, utilise l'IA
+            if not best_match:
+                target_texts = target_variants.get(target, [target])
+                
+                for source in column_headers:
+                    # Teste la similarité avec chaque variante
+                    for target_text in target_texts:
+                        score = self._compute_similarity(source, target_text)
+                        if score > best_score:
+                            best_score = score
+                            best_match = source
+            
+            mapping[target] = best_match
+        
+        return mapping
+    
+    def _generate_multilingual_variants(self, columns: List[str]) -> Dict[str, List[str]]:
+        """Génère des variantes multilingues pour les colonnes"""
+        variants = {
+            "référence": ["référence", "reference", "ref", "codice", "item", "codigo", "artikel", "code"],
+            "désignation": ["désignation", "designation", "description", "descrizione", "descripcion", "bezeichnung", "libellé", "label", "nom", "name"],
+            "prix_unitaire": ["prix unitaire", "prix", "price", "prezzo", "precio", "preis", "prix ht", "prix ttc", "prix achat"],
+            "quantité": ["quantité", "quantity", "qty", "qté", "quantita", "cantidad", "menge"],
+            "unité": ["unité", "unit", "unita", "unidad", "einheit", "u"],
+            "famille": ["famille", "family", "categoria", "category", "categorie", "kategorie"],
+            "fournisseur": ["fournisseur", "supplier", "marca", "marque", "brand", "hersteller"]
+        }
+        
+        result = {}
+        for col in columns:
+            normalized = self.normalizer._normalize(col)
+            # Cherche dans les variantes
+            for key, vals in variants.items():
+                if normalized in [self.normalizer._normalize(v) for v in vals]:
+                    result[col] = vals
+                    break
+            
+            if col not in result:
+                result[col] = [col]
+        
+        return result
+
+    def get_column_mapping_with_confidence(
+        self,
+        column_headers: List[str],
+        target_columns: List[str],
+        min_confidence: float = 0.6
+    ) -> Dict[str, Dict[str, any]]:
+        """
+        Version avancée avec score de confiance
+        
+        Args:
+            column_headers: En-têtes du catalogue
+            target_columns: Colonnes cibles
+            min_confidence: Confiance minimale
+            
+        Returns:
+            Dict avec 'column' et 'confidence' pour chaque cible
+        """
+        result = {}
+        target_variants = self._generate_multilingual_variants(target_columns)
+        
+        for target in target_columns:
+            best_match = None
+            best_score = min_confidence
+            method = 'none'
+            
+            # 1. Cherche dans l'apprentissage d'abord
+            for source in column_headers:
+                learned = self._check_learned_mapping(source, [target])
+                if learned:
+                    best_match = source
+                    best_score = 1.0
+                    method = 'learned'
+                    break
+            
+            # 2. Si pas trouvé, utilise l'IA sémantique
+            if not best_match:
+                target_texts = target_variants.get(target, [target])
+                
+                for source in column_headers:
+                    for target_text in target_texts:
+                        score = self._compute_similarity(source, target_text)
+                        if score > best_score:
+                            best_score = score
+                            best_match = source
+                            method = 'ai'
+            
+            # 3. Fallback sur normalisation
+            if not best_match:
+                for source in column_headers:
+                    score = self.normalizer.similarity_score(source, target)
+                    if score > best_score:
+                        best_score = score
+                        best_match = source
+                        method = 'normalizer'
+            
+            result[target] = {
+                'column': best_match,
+                'confidence': best_score,
+                'method': method
+            }
+        
+        return result
+    
+    def match_with_fallback(
+        self,
+        column_headers: List[str],
+        target_columns: List[str],
+        use_ai: bool = True,
+        learning_system = None
+    ) -> Dict[str, Dict[str, any]]:
+        """
+        Matching hybride: apprentissage, IA, puis normalisation
+        
+        Args:
+            column_headers: Colonnes du catalogue
+            target_columns: Colonnes du template
+            use_ai: Utiliser l'IA (False = normalisation uniquement)
+            learning_system: Système d'apprentissage optionnel
+            
+        Returns:
+            Mapping avec confiance et méthode utilisée
+        """
+        # Étape 1: Utiliser l'historique d'apprentissage en premier
+        result = {}
+        matched_sources = set()
+        matched_targets = set()
+        
+        if learning_system:
+            for target_col in target_columns:
+                # Chercher dans l'historique si une colonne source correspond à cette cible
+                for source_col in column_headers:
+                    suggestion = learning_system.get_suggestion(source_col)
+                    if suggestion:
+                        normalized_suggestion = self._normalize(suggestion)
+                        normalized_target = self._normalize(target_col)
+                        if normalized_suggestion == normalized_target:
+                            result[target_col] = {
+                                'column': source_col,
+                                'confidence': 1.0,
+                                'method': 'learning'
+                            }
+                            matched_sources.add(source_col)
+                            matched_targets.add(target_col)
+                            break
+        
+        # Étape 2: IA + Normalisation pour les colonnes non matchées
+        remaining_headers = [h for h in column_headers if h not in matched_sources]
+        remaining_targets = [t for t in target_columns if t not in matched_targets]
+        
+        if remaining_targets:
+            ai_mapping = self.get_column_mapping_with_confidence(
+                remaining_headers,
+                remaining_targets,
+                min_confidence=0.5 if use_ai else 0.55
+            )
+            result.update(ai_mapping)
+        
+        # Compléter avec les colonnes non matchées
+        for target_col in target_columns:
+            if target_col not in result:
+                result[target_col] = {
+                    'column': None,
+                    'confidence': 0.0,
+                    'method': 'none'
+                }
+        
+        return result
+    
+    def _normalize(self, text: str) -> str:
+        """Normalise un texte pour la comparaison"""
+        return text.lower().strip().replace('_', ' ').replace('-', ' ')
+    
+    def get_suggestions(
+        self,
+        source_column: str,
+        target_columns: List[str],
+        top_n: int = 3
+    ) -> List[Tuple[str, float]]:
+        """
+        Obtient les N meilleures suggestions pour une colonne
+        
+        Args:
+            source_column: Colonne source
+            target_columns: Liste des colonnes cibles
+            top_n: Nombre de suggestions
+            
+        Returns:
+            Liste de tuples (colonne, score) triée par score
+        """
+        scores = []
+        
+        # Combine les scores IA et normalisation
+        for target in target_columns:
+            # Score IA sémantique
+            ai_score = self._compute_similarity(source_column, target)
+            
+            # Score normalisation
+            norm_score = self.normalizer.similarity_score(source_column, target)
+            
+            # Score combiné (moyenne pondérée)
+            combined_score = (ai_score * 0.7) + (norm_score * 0.3)
+            
+            scores.append((target, combined_score))
+        
+        # Trier par score décroissant
+        scores.sort(key=lambda x: x[1], reverse=True)
+        
+        return scores[:top_n]
+    
+    def batch_learn_from_mapping(self, mapping: Dict[str, str], catalog_context: str = ""):
+        """
+        Apprend plusieurs correspondances en batch
+        
+        Args:
+            mapping: Dict {source_column: target_column}
+            catalog_context: Contexte du catalogue
+        """
+        for source, target in mapping.items():
+            if target:  # Ignore les mappings None
+                self.learn_mapping(source, target, catalog_context)
+        
+        print(f"✓ {len([v for v in mapping.values() if v])} correspondances apprises")

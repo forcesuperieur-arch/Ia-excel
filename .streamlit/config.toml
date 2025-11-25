@@ -1,0 +1,18 @@
+[theme]
+base = "light"
+primaryColor = "#475569"          # Slate-600
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F7F8FA"
+textColor = "#0F172A"             # Slate-900
+font = "sans serif"
+
+[server]
+maxUploadSize = 200
+enableCORS = false
+enableXsrfProtection = true
+runOnSave = true
+
+[browser]
+gatherUsageStats = false
+serverAddress = "0.0.0.0"
+serverPort = 8501
