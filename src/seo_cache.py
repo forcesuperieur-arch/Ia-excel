@@ -3,7 +3,6 @@ Système de cache pour descriptions SEO (SQLite)
 Évite les régénérations de produits déjà traités
 """
 import hashlib
-import json
 from typing import Optional, Dict
 import logging
 from .database import DatabaseManager

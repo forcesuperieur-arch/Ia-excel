@@ -2,10 +2,8 @@
 Module de matching intelligent des colonnes Excel avec IA locale
 """
 import json
-import os
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
-import numpy as np
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from dotenv import load_dotenv

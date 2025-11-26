@@ -2,7 +2,7 @@
 Module pour parser et extraire les données des catalogues Excel fournisseurs
 """
 import pandas as pd
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 from pathlib import Path
 
 

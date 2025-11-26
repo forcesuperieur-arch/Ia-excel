@@ -3,8 +3,7 @@ import logging
 import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from typing import List, Dict, Optional, Any
-from urllib.parse import urlparse
+from typing import List, Dict, Any
 
 logger = logging.getLogger(__name__)
 

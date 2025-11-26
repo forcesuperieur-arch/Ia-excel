@@ -3,7 +3,7 @@ Module pour générer les fichiers Excel de sortie avec table matrice
 """
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils.dataframe import dataframe_to_rows

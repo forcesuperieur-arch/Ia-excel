@@ -8,7 +8,6 @@ import requests
 import re
 import time
 from io import BytesIO
-import zipfile
 import logging
 
 # Configuration des logs
@@ -28,7 +27,6 @@ from src.template_manager import TemplateManager
 from src.product_description_generator import ProductDescriptionGenerator
 from src.template_injector import TemplateInjector
 from src.matching_learning import MatchingLearning
-from src.web_search import WebSearchEnricher
 
 
 def get_secret(key: str, default: str = "") -> str:

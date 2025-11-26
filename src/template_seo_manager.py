@@ -4,7 +4,7 @@ Permet de créer, modifier et gérer des templates par catégorie
 """
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 import logging
 
 logger = logging.getLogger(__name__)

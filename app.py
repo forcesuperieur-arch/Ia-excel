@@ -4,7 +4,6 @@ Interface web moderne pour le traitement intelligent de catalogues Excel
 Version 2.0 - Design repensé avec OpenRouter/OpenAI
 """
 import streamlit as st
-import os
 from src.ui_components import (
     load_css,
     init_session_state,
