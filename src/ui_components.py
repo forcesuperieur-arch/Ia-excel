@@ -1,4 +1,4 @@
-import streamlit as st
+t streamlit as st
 import pandas as pd
 from pathlib import Path
 import os
@@ -9,6 +9,17 @@ import re
 import time
 from io import BytesIO
 import zipfile
+import logging
+
+# Configuration des logs
+LOG_FILE = "app.log"
+logging.basicConfig(
+    filename=LOG_FILE,
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
+)
+logger = logging.getLogger(__name__)
 
 from src.catalog_parser import CatalogParser
 from src.ai_matcher import ColumnMatcher
@@ -726,6 +737,30 @@ def render_settings():
             st.session_state.seo_results = None
             st.session_state.seo_generated = False
             st.success("Cache vidée.")
+
+    st.divider()
+    st.markdown("### 📜 Logs Serveur")
+    st.caption("Consultez les logs pour le débogage.")
+    
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            # Lire les dernières lignes pour ne pas surcharger
+            lines = f.readlines()
+            last_lines = "".join(lines[-500:]) # 500 dernières lignes
+            
+        st.text_area("Derniers logs", last_lines, height=300, key="log_viewer")
+        
+        col_l1, col_l2 = st.columns(2)
+        with col_l1:
+            st.download_button("⬇️ Télécharger les logs complets", "".join(lines), "app.log", mime="text/plain", use_container_width=True)
+        with col_l2:
+            if st.button("🗑️ Effacer les logs", use_container_width=True):
+                with open(LOG_FILE, "w") as f:
+                    f.write(f"Log cleared at {datetime.now()}\n")
+                st.rerun()
+    else:
+        st.info("Aucun fichier de log trouvé.")
+
 
 
 def sidebar_config(disable_nav: bool = False):
