@@ -55,6 +55,15 @@ class ColumnMatcher:
     # Modèle plus léger et rapide pour le cloud
     DEFAULT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
     
+    # Colonnes critiques à matcher EN PREMIER (par priorité décroissante)
+    CRITICAL_COLUMNS = {
+        "référence": 1,      # Priorité 1 (ESSENTIELLE)
+        "designation": 2,    # Priorité 2 (très important)
+        "prix": 3,           # Priorité 3
+        "quantité": 4,       # Priorité 4
+        "description": 2,    # Même priorité que désignation
+    }
+    
     def __init__(self, model_name: str = None):
         """
         Initialise le matcher avec un modèle local multilingue
@@ -71,6 +80,14 @@ class ColumnMatcher:
         # Fichier d'apprentissage pour stocker les correspondances validées
         self.learning_file = Path("learning_data.json")
         self.learned_mappings = self._load_learning_data()
+    
+    def _get_column_priority(self, column_name: str) -> int:
+        """Retourne la priorité d'une colonne (1=très haute, 99=basse)"""
+        norm = self.normalizer._normalize(column_name)
+        for key, priority in self.CRITICAL_COLUMNS.items():
+            if key.lower() in norm:
+                return priority
+        return 99  # Basse priorité par défaut
         
     def _load_learning_data(self) -> Dict:
         """Charge les données d'apprentissage depuis le fichier JSON"""
@@ -286,9 +303,12 @@ class ColumnMatcher:
         min_confidence: float = 0.6
     ) -> Dict[str, Dict[str, any]]:
         """
-        Stratégie OPTIMISÉE pour Streamlit Cloud:
-        1. Normalisation d'abord (zero mémoire)
-        2. IA seulement pour les colonnes difficiles
+        Stratégie PRIORITAIRE pour Cloud Run:
+        1. Apprentissage
+        2. Normalisation
+        3. IA seulement pour les colonnes critiques manquantes
+        
+        Les colonnes critiques (ref, desc, prix) sont traitées EN PREMIER.
         
         Args:
             column_headers: En-têtes du catalogue
@@ -302,7 +322,7 @@ class ColumnMatcher:
         learned_targets = set()
         total_start = time.time()
         
-        logger.info(f"🎯 Démarrage matching: {len(column_headers)} sources, {len(target_columns)} cibles")
+        logger.info(f"🎯 Démarrage matching PRIORITAIRE: {len(column_headers)} sources, {len(target_columns)} cibles")
         
         # ========== ÉTAPE 1: Apprentissage (très rapide) ==========
         learn_start = time.time()
@@ -336,61 +356,78 @@ class ColumnMatcher:
                     best_match = source
             
             if best_match:
-                # Matched par normalisation - très bon!
                 result[target] = {
                     'column': best_match,
                     'confidence': best_score,
                     'method': 'normalizer'
                 }
             else:
-                # Garder pour l'IA seulement si vraiment nécessaire
                 unmatched_targets.append(target)
         
         norm_elapsed = time.time() - norm_start
         logger.info(f"✓ Étape 2 (normalisation): {len(remaining_targets) - len(unmatched_targets)}/{len(remaining_targets)} matchés en {norm_elapsed:.1f}s")
         
-        # ========== ÉTAPE 3: IA seulement pour les cas difficiles ==========
+        # ========== ÉTAPE 3: IA seulement pour colonnes CRITIQUES manquantes ==========
         if unmatched_targets and column_headers:
-            try:
-                logger.info(f"🔄 Étape 3 (IA): {len(column_headers)} × {len(unmatched_targets)} (cas difficiles)")
-                batch_start = time.time()
-                
-                # ⚠️ LIMITE DRASTIQUE: max 15 colonnes pour éviter OOM
-                if len(unmatched_targets) > 15:
-                    logger.warning(f"⚠️ Limitation: {len(unmatched_targets)} -> 15 colonnes (limitation mémoire)")
-                    unmatched_targets = unmatched_targets[:15]
-                
-                # Calculer les similarités seulement pour les cas difficiles
-                similarities = self._compute_similarity_batch(column_headers, unmatched_targets)
-                batch_elapsed = time.time() - batch_start
-                logger.info(f"✓ Batch computed: {len(similarities)} paires en {batch_elapsed:.1f}s")
-                
-                # Traiter les résultats
-                for target in unmatched_targets:
-                    best_match = None
-                    best_score = min_confidence
+            # Trier par priorité: d'abord les critiques
+            critical_unmatched = []
+            optional_unmatched = []
+            
+            for target in unmatched_targets:
+                priority = self._get_column_priority(target)
+                if priority <= 10:  # Colonnes critiques
+                    critical_unmatched.append((target, priority))
+                else:
+                    optional_unmatched.append((target, priority))
+            
+            # Trier par priorité
+            critical_unmatched.sort(key=lambda x: x[1])
+            optional_unmatched.sort(key=lambda x: x[1])
+            
+            # Traiter critiques EN PREMIER
+            to_process_ai = [t for t, _ in critical_unmatched]
+            
+            # Limiter drastiquement: max 5-10 colonnes en IA pour Cloud Run
+            if len(to_process_ai) > 10:
+                logger.warning(f"⚠️ Limitation: {len(to_process_ai)} → 10 colonnes critiques (IA)")
+                to_process_ai = to_process_ai[:10]
+            
+            if to_process_ai:
+                try:
+                    logger.info(f"🔄 Étape 3 (IA critiques): {len(column_headers)} × {len(to_process_ai)} colonnes")
+                    batch_start = time.time()
                     
-                    for source in column_headers:
-                        score = similarities.get((source, target), 0)
-                        if score > best_score:
-                            best_score = score
-                            best_match = source
+                    similarities = self._compute_similarity_batch(column_headers, to_process_ai)
+                    batch_elapsed = time.time() - batch_start
+                    logger.info(f"✓ Batch critique computed: {len(similarities)} paires en {batch_elapsed:.1f}s")
                     
-                    result[target] = {
-                        'column': best_match,
-                        'confidence': best_score,
-                        'method': 'ai' if best_match else 'none'
-                    }
+                    for target in to_process_ai:
+                        best_match = None
+                        best_score = min_confidence
                         
-            except Exception as e:
-                elapsed = time.time() - batch_start
-                logger.error(f"✗ Erreur IA après {elapsed:.1f}s: {str(e)}", exc_info=True)
-                # Fallback: marquer les unmatched
-                for target in unmatched_targets:
+                        for source in column_headers:
+                            score = similarities.get((source, target), 0)
+                            if score > best_score:
+                                best_score = score
+                                best_match = source
+                        
+                        result[target] = {
+                            'column': best_match,
+                            'confidence': best_score,
+                            'method': 'ai' if best_match else 'none'
+                        }
+                        
+                except Exception as e:
+                    elapsed = time.time() - batch_start
+                    logger.error(f"✗ Erreur IA critiques après {elapsed:.1f}s: {str(e)}", exc_info=True)
+            
+            # Les colonnes optionnelles non matchées: fallback normalisation complète ou None
+            for target, _ in optional_unmatched:
+                if target not in result:
                     result[target] = {
                         'column': None,
                         'confidence': 0.0,
-                        'method': 'error'
+                        'method': 'skipped_optional'  # Non critiques, on saute
                     }
         
         # Remplir les colonnes non matchées
