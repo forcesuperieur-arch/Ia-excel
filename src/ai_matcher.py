@@ -4,29 +4,45 @@ Module de matching intelligent des colonnes Excel avec IA locale
 import json
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
-from sentence_transformers import SentenceTransformer
+import streamlit as st
 from sklearn.metrics.pairwise import cosine_similarity
-from dotenv import load_dotenv
 from .column_normalizer import ColumnNormalizer
+import logging
 
-load_dotenv()
+logger = logging.getLogger(__name__)
+
+
+@st.cache_resource(show_spinner="🔄 Chargement du modèle IA (première fois uniquement)...")
+def _load_sentence_transformer(model_name: str):
+    """Charge le modèle SentenceTransformer avec cache Streamlit"""
+    from sentence_transformers import SentenceTransformer
+    import torch
+    
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    logger.info(f"🔄 Chargement du modèle IA: {model_name} sur {device}")
+    
+    model = SentenceTransformer(model_name, device=device)
+    logger.info(f"✅ Modèle {model_name} chargé")
+    return model
 
 
 class ColumnMatcher:
     """Utilise une IA locale (sentence-transformers) pour matcher les colonnes"""
     
-    def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2"):
+    # Modèle plus léger et rapide pour le cloud
+    DEFAULT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
+    
+    def __init__(self, model_name: str = None):
         """
         Initialise le matcher avec un modèle local multilingue
         
         Args:
             model_name: Nom du modèle sentence-transformers à utiliser
         """
-        import torch
-        # Déterminer le meilleur appareil (GPU/CPU)
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print(f"🔄 Chargement du modèle IA local: {model_name} sur {device}")
-        self.model = SentenceTransformer(model_name, device=device)
+        model_name = model_name or self.DEFAULT_MODEL
+        
+        # Utiliser le cache Streamlit pour éviter de recharger le modèle
+        self.model = _load_sentence_transformer(model_name)
         self.normalizer = ColumnNormalizer()
         
         # Fichier d'apprentissage pour stocker les correspondances validées
@@ -40,7 +56,7 @@ class ColumnMatcher:
                 with open(self.learning_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
-                print(f"⚠️ Erreur chargement apprentissage: {e}")
+                logger.warning(f"⚠️ Erreur chargement apprentissage: {e}")
                 return {}
         return {}
     
@@ -49,9 +65,9 @@ class ColumnMatcher:
         try:
             with open(self.learning_file, 'w', encoding='utf-8') as f:
                 json.dump(self.learned_mappings, f, ensure_ascii=False, indent=2)
-            print(f"✓ Apprentissage sauvegardé dans {self.learning_file}")
+            logger.info(f"✓ Apprentissage sauvegardé dans {self.learning_file}")
         except Exception as e:
-            print(f"✗ Erreur sauvegarde apprentissage: {e}")
+            logger.error(f"✗ Erreur sauvegarde apprentissage: {e}")
     
     def learn_mapping(self, source_column: str, target_column: str, catalog_context: str = ""):
         """
