@@ -1,20 +1,23 @@
 import os
 import logging
+import socket
+
+# Forcer IPv4 AVANT d'importer psycopg2 pour éviter les problèmes sur Streamlit Cloud
+_original_getaddrinfo = socket.getaddrinfo
+
+def _forced_ipv4_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    """Force l'utilisation d'IPv4 pour les connexions réseau"""
+    # Forcer AF_INET (IPv4) au lieu de AF_UNSPEC
+    if family == socket.AF_UNSPEC:
+        family = socket.AF_INET
+    return _original_getaddrinfo(host, port, family, type, proto, flags)
+
+socket.getaddrinfo = _forced_ipv4_getaddrinfo
+
 import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
-import socket
-
-# Forcer IPv4 pour éviter les problèmes de connexion sur Streamlit Cloud
-original_getaddrinfo = socket.getaddrinfo
-
-def forced_ipv4_getaddrinfo(*args, **kwargs):
-    """Force l'utilisation d'IPv4 pour les connexions réseau"""
-    responses = original_getaddrinfo(*args, **kwargs)
-    return [r for r in responses if r[0] == socket.AF_INET] or responses
-
-socket.getaddrinfo = forced_ipv4_getaddrinfo
 
 logger = logging.getLogger(__name__)
 
