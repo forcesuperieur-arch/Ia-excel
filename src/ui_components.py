@@ -1004,20 +1004,25 @@ def analyze_catalog(uploaded_file, config):
     with open(temp_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
     
+    analyze_start = time.time()
     try:
         # Parser le catalogue
+        logger.info(f"📂 Parsing catalogue: {uploaded_file.name}")
         parser = CatalogParser(str(temp_path))
         header_row = parser.detect_header_row()
         
         if not parser.load(header_row=header_row):
+            logger.error("❌ Impossible de charger le catalogue")
             st.error("❌ Impossible de charger le catalogue")
             return None
         
         headers = parser.get_headers()
+        logger.info(f"✓ Catalogue chargé: {len(headers)} colonnes, {len(parser.df)} lignes")
         
         # Déterminer les colonnes cibles
         target_columns = []
         if st.session_state.use_template and st.session_state.selected_template:
+            logger.info(f"📋 Utilisation template: {st.session_state.selected_template}")
             template_path = st.session_state.template_manager.get_template_path(
                 st.session_state.selected_template
             )
@@ -1025,16 +1030,19 @@ def analyze_catalog(uploaded_file, config):
                 injector = TemplateInjector(template_path)
                 injector.select_sheet()
                 target_columns = injector.get_headers_from_row(row=1)
+                logger.info(f"✓ Template: {len(target_columns)} colonnes cibles")
         
         if not target_columns:
             target_columns = headers  # Prendre toutes les colonnes du catalogue
+            logger.info("⚠️ Pas de template, utilisation des colonnes du catalogue")
         
         logger.info(f"📊 Headers catalogue: {headers[:5]}...")
         logger.info(f"🎯 Colonnes cibles: {target_columns[:5]}...")
         
         # Matching intelligent
+        logger.info("🔄 Démarrage du matching intelligent...")
+        matcher_start = time.time()
         matcher = ColumnMatcher()
-        logger.info("🔄 Démarrage du matching...")
         
         column_mapping = matcher.match_with_fallback(
             column_headers=headers,
@@ -1043,9 +1051,14 @@ def analyze_catalog(uploaded_file, config):
             learning_system=st.session_state.learning_system
         )
         
-        logger.info(f"✅ Matching terminé: {len(column_mapping)} colonnes")
+        matcher_elapsed = time.time() - matcher_start
+        matched = sum(1 for v in column_mapping.values() if v.get('column'))
+        logger.info(f"✅ Matching terminé: {matched}/{len(column_mapping)} en {matcher_elapsed:.1f}s")
         
         temp_path.unlink()
+        
+        total_elapsed = time.time() - analyze_start
+        logger.info(f"🎉 Analyse complète en {total_elapsed:.1f}s")
         
         return {
             "data": parser.df,
@@ -1055,7 +1068,8 @@ def analyze_catalog(uploaded_file, config):
         }
         
     except Exception as e:
-        logger.error(f"❌ Erreur analyse: {str(e)}", exc_info=True)
+        elapsed = time.time() - analyze_start
+        logger.error(f"❌ Erreur analyse après {elapsed:.1f}s: {str(e)}", exc_info=True)
         st.error(f"❌ Erreur: {str(e)}")
         if temp_path.exists():
             temp_path.unlink()
