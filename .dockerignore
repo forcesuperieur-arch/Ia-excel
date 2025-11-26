@@ -1,0 +1,27 @@
+# Fichiers à ignorer lors du build Docker
+.git
+.gitignore
+.github
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.venv
+venv
+env
+.env
+.DS_Store
+.idea
+*.log
+app.log
+catalogues/
+learning_data.json
+matching_history.json
+templates/cache_seo.json
+.streamlit/secrets.toml
+.pytest_cache
+*.xlsx
+*.xls
+node_modules
+.vscode
+*.md

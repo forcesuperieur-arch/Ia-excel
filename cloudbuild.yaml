@@ -1,0 +1,44 @@
+steps:
+  # Étape 1: Construire l'image Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ia-excel:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/ia-excel:latest'
+      - '.'
+    dir: '.'
+
+  # Étape 2: Pousser l'image vers Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/ia-excel:$SHORT_SHA'
+
+  # Étape 3: Déployer sur Cloud Run
+  - name: 'gcr.io/cloud-builders/run'
+    args:
+      - 'deploy'
+      - 'ia-excel'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/ia-excel:$SHORT_SHA'
+      - '--region'
+      - 'europe-west1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '1Gi'
+      - '--cpu'
+      - '1'
+      - '--timeout'
+      - '3600'
+      - '--set-env-vars'
+      - 'STREAMLIT_SERVER_HEADLESS=true'
+
+images:
+  - 'gcr.io/$PROJECT_ID/ia-excel:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/ia-excel:latest'
+
+timeout: '1800s'

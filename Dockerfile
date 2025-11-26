@@ -1,0 +1,32 @@
+# Utiliser une image Python légère
+FROM python:3.12-slim
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Installer les dépendances système (minimales)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copier les requirements
+COPY requirements.txt .
+
+# Installer les dépendances Python avec cache
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copier le reste de l'application
+COPY . .
+
+# Configuration Streamlit pour Cloud Run
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV STREAMLIT_SERVER_PORT=8080
+ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+ENV STREAMLIT_CLIENT_TOOLBAR_MODE=minimal
+ENV STREAMLIT_LOGGER_LEVEL=info
+
+# Exposition du port
+EXPOSE 8080
+
+# Démarrer Streamlit
+CMD ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
