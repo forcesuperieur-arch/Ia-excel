@@ -55,10 +55,10 @@ class OpenAIClient:
         else:
             try:
                 # Initialiser avec base_url pour OpenRouter
+                # Note: on n'utilise pas timeout comme kwarg direct pour éviter les conflits httpx
                 client_kwargs = {
                     "api_key": self.api_key,
                     "max_retries": 2,
-                    "timeout": 60.0
                 }
                 
                 if self.base_url:

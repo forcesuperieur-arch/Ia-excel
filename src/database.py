@@ -4,6 +4,17 @@ import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
+import socket
+
+# Forcer IPv4 pour éviter les problèmes de connexion sur Streamlit Cloud
+original_getaddrinfo = socket.getaddrinfo
+
+def forced_ipv4_getaddrinfo(*args, **kwargs):
+    """Force l'utilisation d'IPv4 pour les connexions réseau"""
+    responses = original_getaddrinfo(*args, **kwargs)
+    return [r for r in responses if r[0] == socket.AF_INET] or responses
+
+socket.getaddrinfo = forced_ipv4_getaddrinfo
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +56,8 @@ class DatabaseManager:
             raise ValueError("Configuration de base de données manquante")
         
         try:
-            conn = psycopg2.connect(self.dsn)
+            # Options de connexion pour Supabase (mode session)
+            conn = psycopg2.connect(self.dsn, options="-c statement_timeout=30000")
             return conn
         except Exception as e:
             logger.error(f"❌ Erreur de connexion DB: {e}")
