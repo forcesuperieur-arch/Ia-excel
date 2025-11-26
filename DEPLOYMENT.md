@@ -1,65 +1,109 @@
-# Guide de Déploiement sur Streamlit Cloud
+# 🚀 DÉPLOIEMENT CLOUD RUN - INSTRUCTIONS
 
-Ce guide vous accompagne étape par étape pour déployer votre application **IA Excel Pro** sur Streamlit Cloud avec une base de données **Supabase**.
+## Status: ✅ PRÊT À DÉPLOYER
 
-## Prérequis
+Le projet Cloud Run est entièrement préparé. Tu dois exécuter le déploiement **depuis ta machine locale** avec tes identifiants Google Cloud.
 
-*   Un compte [GitHub](https://github.com/)
-*   Un compte [Streamlit Cloud](https://streamlit.io/cloud)
-*   Un compte [Supabase](https://supabase.com/)
+## 📋 Prérequis
 
-## Étape 1 : Préparation de la Base de Données (Supabase)
+1. **Google Cloud CLI** installé: https://cloud.google.com/sdk/docs/install
+2. **Compte Google Cloud** authentifié
+3. **Projet**: `potent-galaxy-479319-r7` (déjà configuré)
 
-1.  Connectez-vous à [Supabase](https://supabase.com/) et créez un nouveau projet.
-2.  Une fois le projet prêt, allez dans l'onglet **SQL Editor** (icône terminal dans la barre latérale gauche).
-3.  Cliquez sur **New query**.
-4.  Copiez le contenu du fichier `supabase_schema.sql` (situé à la racine de ce projet) et collez-le dans l'éditeur.
-5.  Cliquez sur **Run** pour créer les tables nécessaires.
-6.  Allez dans **Project Settings** (roue dentée) > **Database**.
-7.  Dans la section **Connection string**, sélectionnez l'onglet **URI**.
-8.  Copiez la chaîne de connexion. Elle ressemble à :
-    `postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres`
-    *(Notez bien le mot de passe que vous avez défini lors de la création du projet, vous devrez remplacer `[YOUR-PASSWORD]` par celui-ci).*
+## 🚀 Déployer en 3 commandes
 
-## Étape 2 : Mise en ligne du Code (GitHub)
+```bash
+# 1. Clone le repo
+git clone https://github.com/forcesuperieur-arch/Ia-excel.git
+cd Ia-excel
 
-1.  Assurez-vous que tous vos fichiers sont sauvegardés.
-2.  Poussez votre code sur un dépôt GitHub (public ou privé).
-    ```bash
-    git add .
-    git commit -m "Préparation déploiement Supabase"
-    git push
-    ```
+# 2. Authentifier Google Cloud
+gcloud auth login
 
-## Étape 3 : Déploiement sur Streamlit Cloud
+# 3. Lancer le déploiement
+bash deploy-cloud-run.sh
+```
 
-1.  Connectez-vous à [Streamlit Cloud](https://share.streamlit.io/).
-2.  Cliquez sur **New app**.
-3.  Sélectionnez votre dépôt GitHub, la branche (`main`) et le fichier principal (`app.py`).
-4.  Cliquez sur **Advanced settings**.
-5.  Dans la section **Secrets**, copiez-collez le contenu ci-dessous en remplaçant les valeurs par les vôtres :
+**C'est tout!** ✨ Le script va:
+- Activer les APIs nécessaires
+- Construire l'image Docker
+- Déployer le service
+- Afficher l'URL d'accès
 
-    ```toml
-    [postgres]
-    url = "postgresql://postgres:VOTRE_MOT_DE_PASSE@db.VOTRE_PROJET.supabase.co:5432/postgres"
+## 📊 Ressources Déployées
 
-    [api_keys]
-    # Ajoutez vos clés API ici si vous voulez qu'elles soient pré-configurées
-    # Sinon, vous pourrez les entrer dans l'interface de l'application
-    openai = "sk-..."
-    openrouter = "sk-or-..."
-    ```
+- **Mémoire**: 2GB (vs 512MB Streamlit Cloud)
+- **CPU**: 2 vCPU (permet le batch encoding)
+- **Timeout**: 1h max
+- **Auto-scaling**: Activé (scale de 0 à N instances)
+- **Région**: Europe West 1 (Belgique)
+- **Coût**: ~$0.60-1.00/mois
 
-6.  Cliquez sur **Save** puis sur **Deploy**.
+## ⚙️ Après Déploiement: Configurer les Secrets
 
-## Étape 4 : Vérification
+```bash
+gcloud run services update ia-excel \
+  --set-env-vars \
+    "OPENAI_API_KEY=sk-...,SERPER_API_KEY=...,DB_HOST=...,DB_USER=...,DB_PASSWORD=..." \
+  --region europe-west1
+```
 
-Une fois l'application déployée :
-1.  L'application devrait démarrer sans erreur.
-2.  Les fonctionnalités nécessitant la base de données (Historique, Templates, Cache SEO) utiliseront maintenant votre base Supabase.
-3.  Les données seront persistantes même si l'application redémarre.
+## 🔍 Commandes Utiles
 
-## Dépannage
+```bash
+# Voir l'URL du service
+gcloud run services describe ia-excel --region europe-west1 --format 'value(status.url)'
 
-*   **Erreur de connexion DB** : Vérifiez que l'URL dans les secrets est correcte et que le mot de passe ne contient pas de caractères spéciaux non échappés (si c'est le cas, encodez-les en URL encoding).
-*   **Dépendances manquantes** : Le fichier `requirements.txt` et `packages.txt` sont là pour assurer que Streamlit installe tout le nécessaire. Si une erreur survient, vérifiez les logs dans la console Streamlit Cloud.
+# Voir les logs en temps réel
+gcloud logging read "resource.labels.service_name=ia-excel" --limit 50 --follow
+
+# Redéployer (mise à jour)
+gcloud run deploy ia-excel --source . --region europe-west1 --allow-unauthenticated
+
+# Augmenter la mémoire si OOM
+gcloud run services update ia-excel --memory 4Gi --region europe-west1
+```
+
+## 📁 Fichiers Déploiement
+
+```
+Dockerfile              ← Image Docker Python 3.12-slim
+.dockerignore          ← Exclusions pour build léger
+deploy-cloud-run.sh    ← Script déploiement (appelle gcloud)
+cloudbuild.yaml        ← CI/CD optionnel (GitHub → auto-deploy)
+requirements.txt       ← Dépendances Python
+```
+
+## ❓ Troubleshooting
+
+### "You do not currently have an active account"
+```bash
+gcloud auth login
+# Puis accepter les permissions
+```
+
+### "Permission denied" sur Cloud Run
+```bash
+gcloud projects add-iam-policy-binding potent-galaxy-479319-r7 \
+  --member=user:TON_EMAIL@gmail.com \
+  --role=roles/run.admin
+```
+
+### Out of Memory (OOM)?
+L'app utilise du **matching prioritaire** - elle traite d'abord les colonnes critiques (ref, desc, prix) puis les optionnelles. Si OOM:
+```bash
+gcloud run services update ia-excel --memory 4Gi --region europe-west1
+```
+
+### Logs d'erreur?
+```bash
+gcloud logging read "resource.labels.service_name=ia-excel" --limit 100 --format json
+```
+
+## 📞 Support
+
+- Cloud Run Docs: https://cloud.google.com/run/docs
+- Console Google Cloud: https://console.cloud.google.com/
+- Monitoring: https://console.cloud.google.com/run
+
+**Prêt à déployer? Lance `bash deploy-cloud-run.sh`!** 🚀
