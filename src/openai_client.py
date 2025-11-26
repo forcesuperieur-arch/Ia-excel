@@ -6,7 +6,7 @@ import json
 import time
 from typing import Optional, Dict, List
 import logging
-from openai import OpenAI, APIError, RateLimitError, TimeoutError, APIConnectionError
+from openai import OpenAI, APIError, RateLimitError, APITimeoutError, APIConnectionError
 from dotenv import load_dotenv
 
 # Charger variables d'environnement
@@ -132,7 +132,7 @@ class OpenAIClient:
             except RateLimitError:
                 logger.warning(f"⚠️ Rate Limit atteint (tentative {attempt+1}/{max_retries}). Pause 2s...")
                 time.sleep(2)
-            except (TimeoutError, APIConnectionError) as e:
+            except (APITimeoutError, APIConnectionError) as e:
                 logger.warning(f"⚠️ Erreur réseau: {e} (tentative {attempt+1}/{max_retries}). Pause 1s...")
                 time.sleep(1)
             except APIError as e:
