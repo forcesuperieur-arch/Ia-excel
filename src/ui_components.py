@@ -797,7 +797,7 @@ def sidebar_config(disable_nav: bool = False):
         if not disable_nav:
             st.markdown("### 🧭 Navigation")
             nav = st.radio(
-                label="",
+                label="Navigation",
                 options=["📊 Traitement Catalogue", "🧪 Test SEO", "⚙️ Paramètres"],
                 index=0,
                 label_visibility="collapsed",
@@ -1337,7 +1337,7 @@ def phase_seo(config):
                     st.info(row.get('Titre SEO', 'N/A'))
                     
                     st.markdown("**📝 Description**")
-                    st.text_area("", desc, height=200, disabled=True, label_visibility="collapsed")
+                    st.text_area("Description", desc, height=200, disabled=True, label_visibility="collapsed")
             
             except Exception as e:
                 st.error(f"❌ Erreur preview: {e}")
@@ -1684,7 +1684,7 @@ Description Motoblouz:"""
                                 
                                 with col_orig:
                                     st.markdown("### 📄 Originale")
-                                    st.text_area("", custom_description, height=250, disabled=True, label_visibility="collapsed", key="orig_display")
+                                    st.text_area("Description originale", custom_description, height=250, disabled=True, label_visibility="collapsed", key="orig_display")
                                 
                                 with col_new:
                                     st.markdown("### ✨ Style Motoblouz")
