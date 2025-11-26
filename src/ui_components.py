@@ -30,6 +30,23 @@ from src.template_injector import TemplateInjector
 from src.matching_learning import MatchingLearning
 from src.web_search import WebSearchEnricher
 
+
+def get_secret(key: str, default: str = "") -> str:
+    """
+    Récupère un secret depuis st.secrets (Streamlit Cloud) ou os.environ (local).
+    Compatible avec les deux environnements.
+    """
+    # 1. Essayer st.secrets (Streamlit Cloud)
+    try:
+        if key in st.secrets:
+            return st.secrets[key]
+    except (FileNotFoundError, KeyError):
+        pass
+    
+    # 2. Fallback sur les variables d'environnement
+    return os.getenv(key, default)
+
+
 def load_css():
     st.markdown("""
 <style>
@@ -705,7 +722,7 @@ def render_settings():
 
     with col2:
         st.markdown("### 🌐 Test Serper (Google Search)")
-        serper_key = os.getenv("SERPER_API_KEY")
+        serper_key = get_secret("SERPER_API_KEY")
         if not serper_key:
             st.warning("SERPER_API_KEY non définie dans l'environnement")
         if st.button("Tester Serper", use_container_width=True):
@@ -784,8 +801,8 @@ def sidebar_config(disable_nav: bool = False):
         # API Key (Gestion sécurisée en mémoire/session uniquement)
         # Ne jamais stocker la clé sur le disque dans config.json
         
-        # Récupérer depuis l'environnement ou la session
-        env_key = os.getenv("OPENAI_API_KEY", "")
+        # Récupérer depuis st.secrets (Streamlit Cloud), l'environnement ou la session
+        env_key = get_secret("OPENAI_API_KEY", "")
         session_key = st.session_state.get("api_key", "")
         current_key = session_key or env_key
         
@@ -1760,10 +1777,8 @@ Description Motoblouz:"""
             if use_web_search:
                 with st.spinner("🔍 Recherche sur Google via Serper..."):
                     from src.web_search import WebSearchEnricher
-                    from dotenv import load_dotenv
-                    load_dotenv()
                     
-                    serper_key = os.getenv('SERPER_API_KEY')
+                    serper_key = get_secret('SERPER_API_KEY')
                     if serper_key:
                         searcher = WebSearchEnricher(serper_key)
                         search_result = searcher.search_product_info(product_data)

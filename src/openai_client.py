@@ -7,12 +7,19 @@ import time
 from typing import Optional, Dict, List
 import logging
 from openai import OpenAI, APIError, RateLimitError, APITimeoutError, APIConnectionError
-from dotenv import load_dotenv
-
-# Charger variables d'environnement
-load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+
+def _get_secret(key: str, default: str = "") -> str:
+    """Récupère un secret depuis st.secrets ou os.environ"""
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except:
+        pass
+    return os.getenv(key, default)
 
 
 class OpenAIClient:
@@ -27,19 +34,19 @@ class OpenAIClient:
             model: Modèle à utiliser (gpt-4o-mini, gpt-4o, etc.)
             base_url: URL de base (None=OpenAI, "https://openrouter.ai/api/v1"=OpenRouter)
         """
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key or _get_secret("OPENAI_API_KEY")
         
         # Détecter OpenRouter automatiquement si clé commence par sk-or-
         if self.api_key and self.api_key.startswith("sk-or-"):
             self.base_url = base_url or "https://openrouter.ai/api/v1"
             self.is_openrouter = True
             # Utiliser le modèle de l'env ou le défaut OpenRouter
-            self.model = os.getenv("OPENAI_MODEL", "openai/gpt-4o-mini")
+            self.model = _get_secret("OPENAI_MODEL", "openai/gpt-4o-mini")
             logger.info("🔄 Détection OpenRouter")
         else:
             self.base_url = base_url
             self.is_openrouter = False
-            self.model = os.getenv("OPENAI_MODEL", model)
+            self.model = _get_secret("OPENAI_MODEL", model)
         
         if not self.api_key:
             logger.error("❌ OPENAI_API_KEY non définie")

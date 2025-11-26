@@ -3,6 +3,18 @@ from typing import Optional
 from .openai_client import OpenAIClient
 from .ollama_client import OllamaClient
 
+
+def _get_secret(key: str, default: str = "") -> str:
+    """Récupère un secret depuis st.secrets ou os.environ"""
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except:
+        pass
+    return os.getenv(key, default)
+
+
 class AIClientFactory:
     """Factory pour instancier les clients IA de manière centralisée"""
     _openai_instance = None
@@ -16,7 +28,7 @@ class AIClientFactory:
         """
         if provider.lower() == "openai":
             # Si la clé change, on recrée l'instance
-            current_key = api_key or os.getenv("OPENAI_API_KEY")
+            current_key = api_key or _get_secret("OPENAI_API_KEY")
             
             if cls._openai_instance is None:
                 cls._openai_instance = OpenAIClient(api_key=current_key)

@@ -9,12 +9,23 @@ from typing import Dict, Optional, List
 logger = logging.getLogger(__name__)
 
 
+def _get_secret(key: str, default: str = "") -> str:
+    """Récupère un secret depuis st.secrets ou os.environ"""
+    try:
+        import streamlit as st
+        if key in st.secrets:
+            return st.secrets[key]
+    except:
+        pass
+    return os.getenv(key, default)
+
+
 class WebSearchEnricher:
     """Enrichit les données produit avec des infos trouvées sur Google via Serper.dev API"""
     
     def __init__(self, serper_api_key: Optional[str] = None, timeout: int = 10):
         self.timeout = timeout
-        self.serper_api_key = serper_api_key or os.getenv('SERPER_API_KEY')
+        self.serper_api_key = serper_api_key or _get_secret('SERPER_API_KEY')
         
         if not self.serper_api_key:
             logger.warning("⚠️ SERPER_API_KEY non définie. Recherche web désactivée.")
