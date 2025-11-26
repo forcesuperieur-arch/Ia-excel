@@ -1029,14 +1029,21 @@ def analyze_catalog(uploaded_file, config):
         if not target_columns:
             target_columns = headers  # Prendre toutes les colonnes du catalogue
         
+        logger.info(f"📊 Headers catalogue: {headers[:5]}...")
+        logger.info(f"🎯 Colonnes cibles: {target_columns[:5]}...")
+        
         # Matching intelligent
         matcher = ColumnMatcher()
+        logger.info("🔄 Démarrage du matching...")
+        
         column_mapping = matcher.match_with_fallback(
             column_headers=headers,
             target_columns=target_columns,
             use_ai=bool(config.get("api_key")),
             learning_system=st.session_state.learning_system
         )
+        
+        logger.info(f"✅ Matching terminé: {len(column_mapping)} colonnes")
         
         temp_path.unlink()
         
@@ -1048,6 +1055,7 @@ def analyze_catalog(uploaded_file, config):
         }
         
     except Exception as e:
+        logger.error(f"❌ Erreur analyse: {str(e)}", exc_info=True)
         st.error(f"❌ Erreur: {str(e)}")
         if temp_path.exists():
             temp_path.unlink()
