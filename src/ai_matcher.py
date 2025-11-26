@@ -92,13 +92,35 @@ class ColumnMatcher:
         })
         
         self._save_learning_data()
-        print(f"✓ Apprentissage: '{source_column}' → '{target_column}'")
+        logger.info(f"✓ Apprentissage: '{source_column}' → '{target_column}'")
+    
+    def _compute_similarity_batch(self, sources: List[str], targets: List[str]) -> Dict[tuple, float]:
+        """Calcule la similarité entre toutes les paires source-target en batch (optimisé)"""
+        if not sources or not targets:
+            return {}
+        
+        # Encoder tous les textes en une seule fois (beaucoup plus rapide)
+        all_texts = list(sources) + list(targets)
+        all_embeddings = self.model.encode(all_texts, show_progress_bar=False)
+        
+        source_embeddings = all_embeddings[:len(sources)]
+        target_embeddings = all_embeddings[len(sources):]
+        
+        # Calculer toutes les similarités en une fois
+        similarities = cosine_similarity(source_embeddings, target_embeddings)
+        
+        result = {}
+        for i, source in enumerate(sources):
+            for j, target in enumerate(targets):
+                result[(source, target)] = float(similarities[i][j])
+        
+        return result
     
     def _compute_similarity(self, text1: str, text2: str) -> float:
         """Calcule la similarité sémantique entre deux textes"""
         # Embeddings
-        emb1 = self.model.encode([text1])
-        emb2 = self.model.encode([text2])
+        emb1 = self.model.encode([text1], show_progress_bar=False)
+        emb2 = self.model.encode([text2], show_progress_bar=False)
         
         # Similarité cosine
         similarity = cosine_similarity(emb1, emb2)[0][0]
@@ -200,7 +222,7 @@ class ColumnMatcher:
         min_confidence: float = 0.6
     ) -> Dict[str, Dict[str, any]]:
         """
-        Version avancée avec score de confiance
+        Version avancée avec score de confiance (optimisée avec batch encoding)
         
         Args:
             column_headers: En-têtes du catalogue
@@ -211,49 +233,59 @@ class ColumnMatcher:
             Dict avec 'column' et 'confidence' pour chaque cible
         """
         result = {}
-        target_variants = self._generate_multilingual_variants(target_columns)
+        learned_targets = set()
         
+        # 1. D'abord, chercher dans l'apprentissage (très rapide)
         for target in target_columns:
-            best_match = None
-            best_score = min_confidence
-            method = 'none'
-            
-            # 1. Cherche dans l'apprentissage d'abord
             for source in column_headers:
                 learned = self._check_learned_mapping(source, [target])
                 if learned:
-                    best_match = source
-                    best_score = 1.0
-                    method = 'learned'
+                    result[target] = {
+                        'column': source,
+                        'confidence': 1.0,
+                        'method': 'learned'
+                    }
+                    learned_targets.add(target)
                     break
+        
+        # 2. Pour les colonnes non matchées, utiliser le batch encoding (optimisé)
+        remaining_targets = [t for t in target_columns if t not in learned_targets]
+        
+        if remaining_targets and column_headers:
+            logger.info(f"🔄 Calcul similarités: {len(column_headers)} sources × {len(remaining_targets)} cibles")
             
-            # 2. Si pas trouvé, utilise l'IA sémantique
-            if not best_match:
-                target_texts = target_variants.get(target, [target])
+            # Calculer toutes les similarités en une seule fois
+            similarities = self._compute_similarity_batch(column_headers, remaining_targets)
+            
+            for target in remaining_targets:
+                best_match = None
+                best_score = min_confidence
+                method = 'none'
                 
+                # Chercher le meilleur match dans les similarités précalculées
                 for source in column_headers:
-                    for target_text in target_texts:
-                        score = self._compute_similarity(source, target_text)
-                        if score > best_score:
-                            best_score = score
-                            best_match = source
-                            method = 'ai'
-            
-            # 3. Fallback sur normalisation
-            if not best_match:
-                for source in column_headers:
-                    score = self.normalizer.similarity_score(source, target)
+                    score = similarities.get((source, target), 0)
                     if score > best_score:
                         best_score = score
                         best_match = source
-                        method = 'normalizer'
-            
-            result[target] = {
-                'column': best_match,
-                'confidence': best_score,
-                'method': method
-            }
+                        method = 'ai'
+                
+                # 3. Fallback sur normalisation si pas de bon match IA
+                if not best_match:
+                    for source in column_headers:
+                        score = self.normalizer.similarity_score(source, target)
+                        if score > best_score:
+                            best_score = score
+                            best_match = source
+                            method = 'normalizer'
+                
+                result[target] = {
+                    'column': best_match,
+                    'confidence': best_score,
+                    'method': method
+                }
         
+        logger.info(f"✅ Matching terminé: {len(result)} colonnes mappées")
         return result
     
     def match_with_fallback(
