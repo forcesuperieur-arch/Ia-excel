@@ -698,23 +698,32 @@ def render_settings():
             try:
                 from src.ai_client_factory import AIClientFactory
                 
-                # Utiliser la factory pour obtenir le client
-                client_wrapper = AIClientFactory.get_client(provider="openai")
+                # Récupérer la clé actuelle (session ou secrets)
+                current_api_key = st.session_state.get("api_key") or get_secret("OPENAI_API_KEY")
                 
-                if not client_wrapper or not client_wrapper.is_available():
-                    st.error("❌ Client IA non disponible (vérifiez la clé API)")
+                if not current_api_key:
+                    st.error("❌ Aucune clé API configurée")
                 else:
-                    # Test via le wrapper
-                    resp = client_wrapper.generate(
-                        prompt="ping",
-                        system="Réponds uniquement par: pong",
-                        max_tokens=4
-                    )
+                    # Réinitialiser la factory pour forcer une nouvelle connexion avec la clé actuelle
+                    AIClientFactory.reset()
                     
-                    if resp and "pong" in resp.lower():
-                        st.success(f"✅ Connexion IA OK ({client_wrapper.model})")
+                    # Utiliser la factory pour obtenir le client avec la clé actuelle
+                    client_wrapper = AIClientFactory.get_client(provider="openai", api_key=current_api_key)
+                    
+                    if not client_wrapper or not client_wrapper.is_available():
+                        st.error("❌ Client IA non disponible (vérifiez la clé API)")
                     else:
-                        st.warning(f"⚠️ Réponse inattendue: {resp}")
+                        # Test via le wrapper
+                        resp = client_wrapper.generate(
+                            prompt="ping",
+                            system="Réponds uniquement par: pong",
+                            max_tokens=4
+                        )
+                        
+                        if resp and "pong" in resp.lower():
+                            st.success(f"✅ Connexion IA OK ({client_wrapper.model})")
+                        else:
+                            st.warning(f"⚠️ Réponse inattendue: {resp}")
             except Exception as e:
                 st.error(f"❌ Échec connexion IA: {e}")
 
