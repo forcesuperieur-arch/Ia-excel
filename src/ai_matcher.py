@@ -118,12 +118,12 @@ class ColumnMatcher:
         logger.info(f"✓ Apprentissage: '{source_column}' → '{target_column}'")
     
     def _compute_similarity_batch(self, sources: List[str], targets: List[str]) -> Dict[tuple, float]:
-        """Calcule la similarité entre toutes les paires source-target en batch (optimisé)"""
+        """Calcule la similarité entre toutes les paires source-target en batch (ULTRA-OPTIMISÉ)"""
         if not sources or not targets:
             return {}
         
         # Nettoyer et limiter la taille des textes
-        max_len = 200  # Limiter chaque nom de colonne à 200 caractères
+        max_len = 100  # Réduit à 100 pour économiser mémoire
         sources_clean = [str(s)[:max_len] for s in sources]
         targets_clean = [str(t)[:max_len] for t in targets]
         
@@ -131,28 +131,19 @@ class ColumnMatcher:
         start = time.time()
         
         try:
-            # Chunking adaptatif: être plus agressif sur cloud (peu de mémoire)
-            # Calcul: taille_batch = max_vectors / dimensions_embeddings
-            # Pour MiniLM: 384 dimensions, max ~50MB = ~130k vectors
-            total_pairs = len(sources_clean) * len(targets_clean)
+            # ⚠️ ULTRA-LIMITE: Streamlit Cloud ne peut pas gérer beaucoup
+            # Max 10 sources par chunk pour éviter OOM
+            chunk_size = min(10, max(1, len(sources_clean)))
             
-            # Limiter agressivement pour cloud (Streamlit: ~512MB RAM total)
-            if total_pairs > 500:  # Si plus de 500 paires
-                max_batch_size = max(5, min(20, 500 // max(1, len(targets_clean))))
-            else:
-                max_batch_size = min(len(sources_clean), 100)
-            
-            chunk_size = max(1, max_batch_size)
-            logger.info(f"  Chunking: {chunk_size} sources par chunk ({total_pairs} paires totales)")
+            logger.info(f"  Chunking: max {chunk_size} sources par chunk (limitation mémoire stricte)")
             
             result = {}
             
-            # Traiter par chunks de sources
+            # Traiter par chunks TRÈS petits
             for chunk_idx, chunk_start in enumerate(range(0, len(sources_clean), chunk_size)):
                 chunk_end = min(chunk_start + chunk_size, len(sources_clean))
                 source_chunk = sources_clean[chunk_start:chunk_end]
                 
-                # Log tous les chunks (pour debugging)
                 logger.info(f"  [Chunk {chunk_idx + 1}] sources {chunk_start}-{chunk_end}/{len(sources_clean)}")
                 
                 try:
@@ -175,17 +166,19 @@ class ColumnMatcher:
                 
                 except Exception as chunk_err:
                     logger.error(f"  ✗ Chunk {chunk_idx + 1} échoué: {str(chunk_err)}")
-                    # Fallback: continuer avec le chunk suivant plutôt que crash total
-                    continue
+                    # Fallback: retourner ce qu'on a
+                    elapsed = time.time() - start
+                    logger.error(f"✗ Batch encoding échoué après {elapsed:.1f}s et {chunk_idx} chunks")
+                    return result  # Retourner les résultats partiels plutôt que crash
             
             elapsed = time.time() - start
-            logger.info(f"✅ Batch encoding terminé: {len(result)} paires en {elapsed:.1f}s")
+            logger.info(f"✅ Batch encoding OK: {len(result)} paires en {elapsed:.1f}s")
             return result
             
         except Exception as e:
             elapsed = time.time() - start
-            logger.error(f"✗ Batch encoding échoué après {elapsed:.1f}s: {str(e)}", exc_info=True)
-            raise
+            logger.error(f"✗ Batch encoding total échoué après {elapsed:.1f}s: {str(e)}", exc_info=True)
+            return {}  # Retourner dict vide plutôt que crash
     
     def _compute_similarity(self, text1: str, text2: str) -> float:
         """Calcule la similarité sémantique entre deux textes"""
@@ -293,7 +286,9 @@ class ColumnMatcher:
         min_confidence: float = 0.6
     ) -> Dict[str, Dict[str, any]]:
         """
-        Version avancée avec score de confiance (optimisée avec batch encoding)
+        Stratégie OPTIMISÉE pour Streamlit Cloud:
+        1. Normalisation d'abord (zero mémoire)
+        2. IA seulement pour les colonnes difficiles
         
         Args:
             column_headers: En-têtes du catalogue
@@ -309,7 +304,7 @@ class ColumnMatcher:
         
         logger.info(f"🎯 Démarrage matching: {len(column_headers)} sources, {len(target_columns)} cibles")
         
-        # 1. D'abord, chercher dans l'apprentissage (très rapide)
+        # ========== ÉTAPE 1: Apprentissage (très rapide) ==========
         learn_start = time.time()
         for target in target_columns:
             for source in column_headers:
@@ -325,60 +320,77 @@ class ColumnMatcher:
         learn_elapsed = time.time() - learn_start
         logger.info(f"✓ Étape 1 (apprentissage): {len(learned_targets)}/{len(target_columns)} matchés en {learn_elapsed:.1f}s")
         
-        # 2. Pour les colonnes non matchées, utiliser le batch encoding (optimisé)
+        # ========== ÉTAPE 2: Normalisation (rapide, zero mémoire) ==========
         remaining_targets = [t for t in target_columns if t not in learned_targets]
+        norm_start = time.time()
         
-        if remaining_targets and column_headers:
+        unmatched_targets = []
+        for target in remaining_targets:
+            best_match = None
+            best_score = 0.5  # Seuil pour normalisation (bas exprès)
+            
+            for source in column_headers:
+                score = self.normalizer.similarity_score(source, target)
+                if score > best_score:
+                    best_score = score
+                    best_match = source
+            
+            if best_match:
+                # Matched par normalisation - très bon!
+                result[target] = {
+                    'column': best_match,
+                    'confidence': best_score,
+                    'method': 'normalizer'
+                }
+            else:
+                # Garder pour l'IA seulement si vraiment nécessaire
+                unmatched_targets.append(target)
+        
+        norm_elapsed = time.time() - norm_start
+        logger.info(f"✓ Étape 2 (normalisation): {len(remaining_targets) - len(unmatched_targets)}/{len(remaining_targets)} matchés en {norm_elapsed:.1f}s")
+        
+        # ========== ÉTAPE 3: IA seulement pour les cas difficiles ==========
+        if unmatched_targets and column_headers:
             try:
-                logger.info(f"🔄 Étape 2: Calcul similarités batch: {len(column_headers)} × {len(remaining_targets)}")
+                logger.info(f"🔄 Étape 3 (IA): {len(column_headers)} × {len(unmatched_targets)} (cas difficiles)")
                 batch_start = time.time()
                 
-                # Calculer toutes les similarités en une seule fois
-                similarities = self._compute_similarity_batch(column_headers, remaining_targets)
+                # ⚠️ LIMITE DRASTIQUE: max 15 colonnes pour éviter OOM
+                if len(unmatched_targets) > 15:
+                    logger.warning(f"⚠️ Limitation: {len(unmatched_targets)} -> 15 colonnes (limitation mémoire)")
+                    unmatched_targets = unmatched_targets[:15]
+                
+                # Calculer les similarités seulement pour les cas difficiles
+                similarities = self._compute_similarity_batch(column_headers, unmatched_targets)
                 batch_elapsed = time.time() - batch_start
                 logger.info(f"✓ Batch computed: {len(similarities)} paires en {batch_elapsed:.1f}s")
                 
-                # Traiter les résultats avec logging
-                for idx, target in enumerate(remaining_targets):
+                # Traiter les résultats
+                for target in unmatched_targets:
                     best_match = None
                     best_score = min_confidence
-                    method = 'none'
                     
-                    # Chercher le meilleur match dans les similarités précalculées
                     for source in column_headers:
                         score = similarities.get((source, target), 0)
                         if score > best_score:
                             best_score = score
                             best_match = source
-                            method = 'ai'
-                    
-                    # 3. Fallback sur normalisation si pas de bon match IA
-                    if not best_match:
-                        for source in column_headers:
-                            score = self.normalizer.similarity_score(source, target)
-                            if score > best_score:
-                                best_score = score
-                                best_match = source
-                                method = 'normalizer'
                     
                     result[target] = {
                         'column': best_match,
                         'confidence': best_score,
-                        'method': method
+                        'method': 'ai' if best_match else 'none'
                     }
-                    
-                    # Log toutes les 5 cibles
-                    if (idx + 1) % max(1, len(remaining_targets) // 4) == 0:
-                        logger.info(f"  → Traitement {idx + 1}/{len(remaining_targets)}")
                         
             except Exception as e:
-                logger.error(f"✗ Erreur batch encoding: {str(e)}", exc_info=True)
-                # Fallback silencieux sur normalisation uniquement
-                for target in remaining_targets:
+                elapsed = time.time() - batch_start
+                logger.error(f"✗ Erreur IA après {elapsed:.1f}s: {str(e)}", exc_info=True)
+                # Fallback: marquer les unmatched
+                for target in unmatched_targets:
                     result[target] = {
                         'column': None,
                         'confidence': 0.0,
-                        'method': 'error_fallback'
+                        'method': 'error'
                     }
         
         # Remplir les colonnes non matchées
@@ -392,7 +404,7 @@ class ColumnMatcher:
         
         total_elapsed = time.time() - total_start
         matched_count = sum(1 for v in result.values() if v['column'] is not None)
-        logger.info(f"✅ Matching complété: {matched_count}/{len(target_columns)} en {total_elapsed:.1f}s")
+        logger.info(f"✅ Matching complet: {matched_count}/{len(target_columns)} en {total_elapsed:.1f}s")
         return result
     
     def match_with_fallback(
