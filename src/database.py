@@ -58,15 +58,8 @@ class DatabaseManager:
             raise ValueError("Configuration de base de données manquante")
         
         try:
-            # Options pour PgBouncer : désactiver prepared statements
-            connect_args = {"dsn": self.dsn}
-            
-            if self.is_pgbouncer:
-                # PgBouncer en mode transaction ne supporte pas les prepared statements
-                conn = psycopg2.connect(self.dsn, options="-c statement_timeout=30000", prepare_threshold=0)
-            else:
-                conn = psycopg2.connect(self.dsn, options="-c statement_timeout=30000")
-            
+            # Connexion simple - PgBouncer gère le pooling côté serveur
+            conn = psycopg2.connect(self.dsn)
             return conn
         except Exception as e:
             logger.error(f"❌ Erreur de connexion DB: {e}")
