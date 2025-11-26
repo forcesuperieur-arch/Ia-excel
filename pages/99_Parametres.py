@@ -1,5 +1,6 @@
 import streamlit as st
-from app import (
+from src.ui_components import (
+    load_css,
     init_session_state,
     render_header,
     sidebar_config,
@@ -7,7 +8,9 @@ from app import (
     render_footer,
 )
 
-# Page Paramètres
+st.set_page_config(page_title="Paramètres - IA Excel Pro", page_icon="⚙️", layout="wide")
+
+load_css()
 init_session_state()
 render_header()
 
