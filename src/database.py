@@ -5,6 +5,7 @@ import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Any
+from urllib.parse import urlparse, parse_qs
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class DatabaseManager:
     def _init_connection_params(self):
         """Initialise les paramètres de connexion depuis les secrets ou l'environnement"""
         self.dsn = None
+        self.is_pgbouncer = False
         
         # 1. Essayer st.secrets (Streamlit Cloud)
         try:
@@ -36,6 +38,16 @@ class DatabaseManager:
         # 2. Essayer les variables d'environnement
         if not self.dsn:
             self.dsn = os.getenv("POSTGRES_URL") or os.getenv("SUPABASE_DB_URL")
+        
+        # 3. Nettoyer l'URL si elle contient ?pgbouncer=true (non supporté par psycopg2)
+        if self.dsn and "pgbouncer" in self.dsn:
+            self.is_pgbouncer = True
+            # Retirer le paramètre pgbouncer de l'URL
+            if "?pgbouncer=true" in self.dsn:
+                self.dsn = self.dsn.replace("?pgbouncer=true", "")
+            elif "&pgbouncer=true" in self.dsn:
+                self.dsn = self.dsn.replace("&pgbouncer=true", "")
+            logger.info("🔄 Mode PgBouncer détecté")
             
         if not self.dsn:
             logger.warning("⚠️ Aucune configuration de base de données trouvée (Secrets/Env). L'application risque de ne pas fonctionner.")
@@ -46,8 +58,15 @@ class DatabaseManager:
             raise ValueError("Configuration de base de données manquante")
         
         try:
-            # Options de connexion pour Supabase (mode session)
-            conn = psycopg2.connect(self.dsn, options="-c statement_timeout=30000")
+            # Options pour PgBouncer : désactiver prepared statements
+            connect_args = {"dsn": self.dsn}
+            
+            if self.is_pgbouncer:
+                # PgBouncer en mode transaction ne supporte pas les prepared statements
+                conn = psycopg2.connect(self.dsn, options="-c statement_timeout=30000", prepare_threshold=0)
+            else:
+                conn = psycopg2.connect(self.dsn, options="-c statement_timeout=30000")
+            
             return conn
         except Exception as e:
             logger.error(f"❌ Erreur de connexion DB: {e}")
