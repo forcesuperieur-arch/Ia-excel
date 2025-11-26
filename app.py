@@ -27,53 +27,46 @@ def format_description_for_word(text):
     if not text:
         return text
     
-    # Table de conversion des caractères accentués en codes RTF
-    char_map = {
-        'à': r"{\\'e0}", 'â': r"{\\'e2}", 'ä': r"{\\'e4}",
-        'é': r"{\\'e9}", 'è': r"{\\'e8}", 'ê': r"{\\'ea}", 'ë': r"{\\'eb}",
-        'î': r"{\\'ee}", 'ï': r"{\\'ef}",
-        'ô': r"{\\'f4}", 'ö': r"{\\'f6}",
-        'ù': r"{\\'f9}", 'û': r"{\\'fb}", 'ü': r"{\\'fc}",
-        'ç': r"{\\'e7}",
-        'À': r"{\\'c0}", 'Â': r"{\\'c2}", 'Ä': r"{\\'c4}",
-        'É': r"{\\'c9}", 'È': r"{\\'c8}", 'Ê': r"{\\'ca}", 'Ë': r"{\\'cb}",
-        'Î': r"{\\'ce}", 'Ï': r"{\\'cf}",
-        'Ô': r"{\\'d4}", 'Ö': r"{\\'d6}",
-        'Ù': r"{\\'d9}", 'Û': r"{\\'db}", 'Ü': r"{\\'dc}",
-        'Ç': r"{\\'c7}",
-        '€': r"{\\u8364}", '•': r"{\\u8226}",
-    }
+    # En-tête RTF minimaliste qui supporte l'Unicode via UTF-8 implicite ou \u
+    # \ansicpg1252 est standard, mais Word gère bien le contenu mixte si on utilise les bons escapes
+    rtf = r"{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1036{\fonttbl{\f0\fnil\fcharset0 Arial;}}" + "\n"
+    rtf += r"\viewkind4\uc1\pard\sa200\sl276\slmult1\f0\fs22\lang1036 "
     
-    # En-tête RTF avec support Unicode
-    rtf = r"{\rtf1\ansi\ansicpg1252\deff0 {\fonttbl {\f0 Arial;}}" + "\n"
-    rtf += r"\f0\fs22 "  # Police Arial, taille 11pt
+    # Échappement des caractères spéciaux RTF
+    text_rtf = text.replace('\\', '\\\\').replace('{', '\\{').replace('}', '\\}')
     
     # Remplacer **texte** par \b texte\b0 (gras RTF)
-    text_rtf = re.sub(r'\*\*([^*]+)\*\*', r'{\\b \1\\b0}', text)
+    text_rtf = re.sub(r'\*\*([^*]+)\*\*', r'{\\b \1\\b0}', text_rtf)
     
     # Remplacer <b>texte</b> par \b texte\b0
     text_rtf = re.sub(r'<b>([^<]+)</b>', r'{\\b \1\\b0}', text_rtf, flags=re.IGNORECASE)
     
-    # Remplacer les caractères accentués
-    for char, rtf_code in char_map.items():
-        text_rtf = text_rtf.replace(char, rtf_code)
-    
     # Remplacer les sauts de ligne par \par
     text_rtf = text_rtf.replace('\n', r'\par' + '\n')
     
-    rtf += text_rtf
+    # Gestion des caractères Unicode pour RTF (\uN?)
+    # On encode tout ce qui n'est pas ASCII standard
+    final_rtf = ""
+    for char in text_rtf:
+        if ord(char) < 128:
+            final_rtf += char
+        else:
+            # \uN? où N est le code décimal unicode (signé pour short, mais ici on utilise unsigned pour simplicité si < 32768)
+            code = ord(char)
+            final_rtf += f"\\u{code}?"
+            
+    rtf += final_rtf
     rtf += "}"
     
     return rtf
 from io import BytesIO
 import time
+import zipfile
 
 from src.catalog_parser import CatalogParser
 from src.ai_matcher import ColumnMatcher
 from src.matrix_generator import MatrixGenerator
-from src.template_injector import TemplateInjector
 from src.template_manager import TemplateManager
-from src.matching_learning import MatchingLearning
 from src.product_description_generator import ProductDescriptionGenerator
 
 # Configuration de la page
@@ -689,25 +682,25 @@ def render_settings():
         st.markdown("### 🤖 Test API IA (OpenAI/OpenRouter)")
         if st.button("Tester connexion IA", use_container_width=True):
             try:
-                from openai import OpenAI
-                client = OpenAI(
-                    api_key=os.getenv("OPENAI_API_KEY"),
-                    base_url=os.getenv("OPENAI_BASE_URL", "https://openrouter.ai/api/v1")
-                )
-                resp = client.chat.completions.create(
-                    model="openai/gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "Réponds uniquement par: pong"},
-                        {"role": "user", "content": "ping"}
-                    ],
-                    max_tokens=4,
-                    temperature=0
-                )
-                content = resp.choices[0].message.content.strip().lower()
-                if "pong" in content:
-                    st.success("✅ Connexion IA OK (gpt-4o-mini via OpenRouter)")
+                from src.ai_client_factory import AIClientFactory
+                
+                # Utiliser la factory pour obtenir le client
+                client_wrapper = AIClientFactory.get_client(provider="openai")
+                
+                if not client_wrapper or not client_wrapper.is_available():
+                    st.error("❌ Client IA non disponible (vérifiez la clé API)")
                 else:
-                    st.warning("⚠️ Réponse inattendue de l'IA")
+                    # Test via le wrapper
+                    resp = client_wrapper.generate(
+                        prompt="ping",
+                        system="Réponds uniquement par: pong",
+                        max_tokens=4
+                    )
+                    
+                    if resp and "pong" in resp.lower():
+                        st.success(f"✅ Connexion IA OK ({client_wrapper.model})")
+                    else:
+                        st.warning(f"⚠️ Réponse inattendue: {resp}")
             except Exception as e:
                 st.error(f"❌ Échec connexion IA: {e}")
 
@@ -765,22 +758,19 @@ def sidebar_config(disable_nav: bool = False):
             st.divider()
         st.markdown("## ⚙️ Configuration")
         
-        # API Key avec validation
-        config_path = Path("templates") / "config.json"
-        saved_api_key = ""
-        if config_path.exists():
-            try:
-                with open(config_path, 'r') as f:
-                    config_data = json.load(f)
-                    saved_api_key = config_data.get("api_key", "")
-            except:
-                pass
+        # API Key (Gestion sécurisée en mémoire/session uniquement)
+        # Ne jamais stocker la clé sur le disque dans config.json
+        
+        # Récupérer depuis l'environnement ou la session
+        env_key = os.getenv("OPENAI_API_KEY", "")
+        session_key = st.session_state.get("api_key", "")
+        current_key = session_key or env_key
         
         api_key = st.text_input(
             "🔑 Clé API",
             type="password",
-            value=saved_api_key or os.getenv("OPENAI_API_KEY", ""),
-            help="Votre clé OpenAI ou OpenRouter"
+            value=current_key,
+            help="Votre clé OpenAI ou OpenRouter (non stockée sur disque)"
         )
         
         # Validation visuelle de la clé
@@ -794,22 +784,9 @@ def sidebar_config(disable_nav: bool = False):
             else:
                 st.info("🔑 Clé API configurée")
             
+            # Mettre à jour l'environnement et la session pour cette exécution
             os.environ["OPENAI_API_KEY"] = api_key
-            
-            # Sauvegarder
-            if api_key != saved_api_key:
-                try:
-                    config_path.parent.mkdir(exist_ok=True)
-                    config_data = {"api_key": api_key}
-                    if config_path.exists():
-                        with open(config_path, 'r') as f:
-                            config_data = json.load(f)
-                            config_data["api_key"] = api_key
-                    
-                    with open(config_path, 'w') as f:
-                        json.dump(config_data, f, indent=2)
-                except:
-                    pass
+            st.session_state["api_key"] = api_key
         
         st.divider()
         
@@ -1343,23 +1320,34 @@ def phase_seo(config):
                 # Progress
                 progress_bar = st.progress(0)
                 status = st.empty()
+                stop_button = st.button("🛑 Arrêter la génération")
                 
                 total = len(df)
                 status.text(f"🤖 Génération en cours... (0/{total})")
                 
-                def update_progress(current, total_items):
-                    progress = current / total_items
-                    progress_bar.progress(progress)
-                    status.text(f"🤖 Génération OpenRouter... ({current}/{total_items})")
+                # Liste pour stocker les résultats
+                results = []
                 
-                # Générer
-                products = [row.to_dict() for _, row in df.iterrows()]
-                results = generator.generate_batch(
-                    products,
-                    language='fr',
-                    progress_callback=update_progress,
-                    max_workers=3
-                )
+                # Boucle séquentielle avec mise à jour UI
+                for i, row in df.iterrows():
+                    if stop_button:
+                        st.warning("⚠️ Génération arrêtée par l'utilisateur.")
+                        break
+                        
+                    product = row.to_dict()
+                    
+                    # Génération unitaire
+                    result = generator.generate_full_seo(product, language='fr')
+                    results.append(result)
+                    
+                    # Mise à jour UI
+                    progress = (i + 1) / total
+                    progress_bar.progress(progress)
+                    status.text(f"🤖 Génération OpenRouter... ({i + 1}/{total})")
+                
+                # Compléter avec des vides si arrêté
+                while len(results) < len(df):
+                    results.append({'description': "", 'seo_title': "", 'meta_description': ""})
                 
                 # Ajouter au DataFrame
                 df['Description SEO'] = [r['description'] for r in results]
@@ -1376,7 +1364,7 @@ def phase_seo(config):
                 st.session_state.output_path = seo_path
                 
                 progress_bar.progress(1.0)
-                status.text(f"✅ {total} descriptions générées !")
+                status.text(f"✅ {len(results)} descriptions générées !")
                 st.balloons()
                 time.sleep(1)
                 st.rerun()
@@ -1437,14 +1425,49 @@ def phase_complete():
         
         st.divider()
         
-        with open(output_path, "rb") as f:
-            st.download_button(
-                label="📥 Télécharger le fichier Excel",
-                data=f,
-                file_name=os.path.basename(output_path),
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
-            )
+        col_dl1, col_dl2 = st.columns(2)
+        
+        with col_dl1:
+            with open(output_path, "rb") as f:
+                st.download_button(
+                    label="📥 Télécharger le fichier Excel",
+                    data=f,
+                    file_name=os.path.basename(output_path),
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    use_container_width=True
+                )
+        
+        with col_dl2:
+            # Export ZIP des RTF
+            if st.button("📦 Télécharger tout (ZIP Word)", use_container_width=True):
+                try:
+                    import zipfile
+                    from app import format_description_for_word
+                    
+                    df = pd.read_excel(output_path)
+                    zip_buffer = BytesIO()
+                    
+                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                        for _, row in df.iterrows():
+                            if 'Description SEO' in row and pd.notna(row['Description SEO']):
+                                # Nom du fichier: Marque_Reference.rtf
+                                ref = str(row.get('Référence', 'REF')).replace('/', '-')
+                                marque = str(row.get('Marque', 'MARQUE')).replace('/', '-')
+                                filename = f"{marque}_{ref}.rtf"
+                                
+                                # Contenu RTF
+                                rtf_content = format_description_for_word(row['Description SEO'])
+                                zip_file.writestr(filename, rtf_content)
+                    
+                    st.download_button(
+                        label="⬇️ Cliquer pour télécharger le ZIP",
+                        data=zip_buffer.getvalue(),
+                        file_name="descriptions_word.zip",
+                        mime="application/zip",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"Erreur ZIP: {e}")
         
         st.info(f"💾 **Fichier:** `{os.path.basename(output_path)}`")
         st.caption(f"📍 **Emplacement:** `{output_path}`")
@@ -1578,27 +1601,23 @@ IMPÉRATIF:
 
 Description Motoblouz:"""
                             
-                            # Utiliser l'API directement
+                            # Utiliser l'API via la Factory
                             try:
-                                from openai import OpenAI
+                                from src.ai_client_factory import AIClientFactory
+                                client_wrapper = AIClientFactory.get_client(provider="openai")
                                 
-                                client = OpenAI(
-                                    api_key=os.getenv("OPENAI_API_KEY"),
-                                    base_url="https://openrouter.ai/api/v1"
-                                )
+                                if not client_wrapper:
+                                    raise ValueError("Client IA non initialisé")
                                 
-                                response = client.chat.completions.create(
-                                    model="openai/gpt-4o-mini",
-                                    messages=[
-                                        {"role": "system", "content": "Tu es un rédacteur de catalogue professionnel pour Motoblouz. Ton style est factuel, descriptif et technique. Tu présentes les produits de façon informative sans marketing émotionnel. Tu n'utilises JAMAIS d'expressions enthousiastes ou promotionnelles. Tu utilises TOUJOURS le formatage Markdown : **gras** pour les mots-clés importants et • listes à puces pour les caractéristiques. Pour les informations d'homologation importantes (homologué/non homologué), utilise <b>texte</b> pour le mettre en gras HTML."},
-                                        {"role": "user", "content": rewrite_prompt}
-                                    ],
+                                rewritten = client_wrapper.generate(
+                                    prompt=rewrite_prompt,
+                                    system="Tu es un rédacteur de catalogue professionnel pour Motoblouz. Ton style est factuel, descriptif et technique. Tu présentes les produits de façon informative sans marketing émotionnel. Tu n'utilises JAMAIS d'expressions enthousiastes ou promotionnelles. Tu utilises TOUJOURS le formatage Markdown : **gras** pour les mots-clés importants et • listes à puces pour les caractéristiques. Pour les informations d'homologation importantes (homologué/non homologué), utilise <b>texte</b> pour le mettre en gras HTML.",
                                     temperature=rewrite_temp,
                                     max_tokens=500
                                 )
                                 
-                                # Accès correct à la réponse
-                                rewritten = response.choices[0].message.content.strip()
+                                if not rewritten:
+                                    raise ValueError("Réponse vide de l'IA")
                                 
                                 st.success("✅ Description réécrite !")
                                 

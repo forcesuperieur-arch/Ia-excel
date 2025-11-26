@@ -1,64 +1,26 @@
 """
-Système de cache pour descriptions SEO
+Système de cache pour descriptions SEO (SQLite)
 Évite les régénérations de produits déjà traités
 """
-import json
 import hashlib
-from pathlib import Path
+import json
 from typing import Optional, Dict
 import logging
+from .database import DatabaseManager
 
 logger = logging.getLogger(__name__)
 
 
 class SEOCache:
-    """Cache pour stocker et récupérer descriptions SEO"""
+    """Cache pour stocker et récupérer descriptions SEO via SQLite"""
     
-    def __init__(self, cache_file: str = "templates/cache_seo.json", max_entries: int = 1000):
-        """
-        Initialise le cache
-        
-        Args:
-            cache_file: Chemin du fichier cache
-            max_entries: Nombre maximum d'entrées (LRU si dépassé)
-        """
-        self.cache_file = Path(cache_file)
-        self.cache_file.parent.mkdir(exist_ok=True)
-        self.max_entries = max_entries
-        self.cache = self._load_cache()
-    
-    def _load_cache(self) -> Dict:
-        """Charge le cache depuis le fichier"""
-        if self.cache_file.exists():
-            try:
-                with open(self.cache_file, 'r', encoding='utf-8') as f:
-                    cache = json.load(f)
-                    logger.info(f"💾 Cache chargé: {len(cache)} entrées")
-                    return cache
-            except Exception as e:
-                logger.warning(f"⚠️ Erreur lecture cache: {e}")
-                return {}
-        return {}
-    
-    def _save_cache(self):
-        """Sauvegarde le cache dans le fichier"""
-        try:
-            with open(self.cache_file, 'w', encoding='utf-8') as f:
-                json.dump(self.cache, f, ensure_ascii=False, indent=2)
-            logger.debug(f"💾 Cache sauvegardé: {len(self.cache)} entrées")
-        except Exception as e:
-            logger.error(f"❌ Erreur sauvegarde cache: {e}")
+    def __init__(self):
+        """Initialise le cache avec la base de données"""
+        self.db = DatabaseManager()
     
     def _get_product_hash(self, product_data: Dict, language: str = "fr") -> str:
         """
         Génère un hash unique pour un produit
-        
-        Args:
-            product_data: Données produit
-            language: Langue de génération
-            
-        Returns:
-            Hash MD5 du produit
         """
         # Utilise référence + libellé + marque + langue
         key_fields = [
@@ -74,19 +36,24 @@ class SEOCache:
     def get(self, product_data: Dict, language: str = "fr") -> Optional[Dict]:
         """
         Récupère une description depuis le cache
-        
-        Args:
-            product_data: Données produit
-            language: Langue
-            
-        Returns:
-            Dict avec description, title, meta ou None si pas en cache
         """
         product_hash = self._get_product_hash(product_data, language)
         
-        if product_hash in self.cache:
+        rows = self.db.execute_query(
+            "SELECT description, seo_title, meta_description FROM cache_seo WHERE hash = ?",
+            (product_hash,)
+        )
+        
+        if rows:
+            row = rows[0]
             logger.info(f"✅ Cache HIT: {product_data.get('Référence', 'N/A')}")
-            return self.cache[product_hash]
+            return {
+                'description': row['description'],
+                'seo_title': row['seo_title'],
+                'meta_description': row['meta_description'],
+                'reference': product_data.get('Référence', 'N/A'),
+                'language': language
+            }
         
         logger.debug(f"❌ Cache MISS: {product_data.get('Référence', 'N/A')}")
         return None
@@ -101,48 +68,52 @@ class SEOCache:
     ):
         """
         Stocke une description dans le cache
-        
-        Args:
-            product_data: Données produit
-            description: Description générée
-            seo_title: Titre SEO
-            meta_description: Meta description
-            language: Langue
         """
         product_hash = self._get_product_hash(product_data, language)
+        reference = str(product_data.get('Référence', 'N/A'))
         
-        # Limiter la taille du cache (LRU simple)
-        if len(self.cache) >= self.max_entries:
-            # Supprimer la première entrée (la plus ancienne)
-            oldest_key = next(iter(self.cache))
-            del self.cache[oldest_key]
-            logger.warning(f"⚠️ Cache plein, suppression de l'entrée la plus ancienne")
-        
-        self.cache[product_hash] = {
-            'description': description,
-            'seo_title': seo_title,
-            'meta_description': meta_description,
-            'reference': product_data.get('Référence', 'N/A'),
-            'language': language
-        }
-        
-        # Sauvegarder toutes les 10 entrées au lieu de chaque fois
-        if len(self.cache) % 10 == 0:
-            self._save_cache()
-        
-        logger.debug(f"💾 Cache SET: {product_data.get('Référence', 'N/A')}")
+        try:
+            self.db.execute_update(
+                """
+                INSERT INTO cache_seo 
+                (hash, reference, description, seo_title, meta_description, language)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (hash) DO UPDATE SET
+                reference = EXCLUDED.reference,
+                description = EXCLUDED.description,
+                seo_title = EXCLUDED.seo_title,
+                meta_description = EXCLUDED.meta_description,
+                language = EXCLUDED.language,
+                created_at = CURRENT_TIMESTAMP
+                """,
+                (product_hash, reference, description, seo_title, meta_description, language)
+            )
+            logger.debug(f"💾 Cache SET: {reference}")
+        except Exception as e:
+            logger.error(f"❌ Erreur écriture cache: {e}")
     
     def clear(self):
         """Vide le cache"""
-        self.cache = {}
-        self._save_cache()
-        logger.info("🗑️ Cache vidé")
+        try:
+            self.db.execute_update("DELETE FROM cache_seo")
+            logger.info("🗑️ Cache vidé")
+        except Exception as e:
+            logger.error(f"❌ Erreur vidage cache: {e}")
     
     def stats(self) -> Dict:
         """Retourne des statistiques sur le cache"""
-        return {
-            'total_entries': len(self.cache),
-            'languages': list(set(entry.get('language', 'fr') for entry in self.cache.values())),
-            'cache_file': str(self.cache_file),
-            'cache_size_kb': self.cache_file.stat().st_size / 1024 if self.cache_file.exists() else 0
-        }
+        try:
+            count_row = self.db.execute_query("SELECT COUNT(*) as count FROM cache_seo")[0]
+            total_entries = count_row['count']
+            
+            # Taille approximative du fichier DB (pas juste la table, mais bon indicateur)
+            db_size = self.db.db_path.stat().st_size / 1024 if self.db.db_path.exists() else 0
+            
+            return {
+                'total_entries': total_entries,
+                'cache_file': str(self.db.db_path),
+                'cache_size_kb': db_size
+            }
+        except Exception as e:
+            logger.error(f"❌ Erreur stats cache: {e}")
+            return {'total_entries': 0, 'cache_size_kb': 0}

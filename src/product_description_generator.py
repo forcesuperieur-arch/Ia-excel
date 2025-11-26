@@ -9,6 +9,7 @@ import time
 
 from .ollama_client import OllamaClient
 from .openai_client import OpenAIClient
+from .ai_client_factory import AIClientFactory
 from .seo_cache import SEOCache
 from .template_seo_manager import TemplateSEOManager
 from .web_search import WebSearchEnricher
@@ -132,12 +133,12 @@ Public: Motards passionnés"""
         """
         self.provider = provider.lower()
         
-        # Initialiser le client approprié
+        # Initialiser le client approprié via la Factory
         if self.provider == "openai":
-            self.client = openai_client or OpenAIClient()
+            self.client = openai_client or AIClientFactory.get_client("openai")
             logger.info(f"🤖 Utilisation d'OpenAI: {self.client.model if self.client else 'N/A'}")
         else:
-            self.client = ollama_client or OllamaClient()
+            self.client = ollama_client or AIClientFactory.get_client("ollama")
             logger.info(f"🤖 Utilisation d'Ollama: {self.client.model if self.client else 'N/A'}")
         
         # Compatibilité: garder self.ollama pour le code existant
@@ -371,15 +372,18 @@ Public: Motards passionnés"""
         # 🌐 ENRICHISSEMENT WEB (recherche Google via Serper API)
         web_context = ""
         if self.use_web_search and self.web_searcher:
-            # Recherche sur Google avec MARQUE + RÉFÉRENCE
-            search_result = self.web_searcher.search_product_info(product_data)
-            
-            if search_result.get('found'):
-                # Formater le contexte pour l'IA
-                raw_context = search_result.get('context', '')
-                if raw_context:
-                    # Ajouter des instructions pour l'IA
-                    web_context = f"""
+            # Retry sur la recherche web
+            for attempt in range(3):
+                try:
+                    # Recherche sur Google avec MARQUE + RÉFÉRENCE
+                    search_result = self.web_searcher.search_product_info(product_data)
+                    
+                    if search_result.get('found'):
+                        # Formater le contexte pour l'IA
+                        raw_context = search_result.get('context', '')
+                        if raw_context:
+                            # Ajouter des instructions pour l'IA
+                            web_context = f"""
 
 🌐 INFORMATIONS TROUVÉES SUR LE WEB (à utiliser pour enrichir):
 {raw_context}
@@ -390,12 +394,16 @@ Public: Motards passionnés"""
 - Les modèles compatibles sont UNIQUEMENT ceux présents dans les données du catalogue ci-dessus
 - Enrichis la description avec les aspects techniques et la réputation de la marque
 """
-                    logger.info(f"✅ Contexte web enrichi pour {product_data.get('Référence', 'produit')}")
-            else:
-                # Fallback: contexte intelligent basé sur la marque
-                web_context = self._create_enhanced_context(product_data, category)
-                if web_context:
-                    logger.info(f"💡 Contexte expert (fallback) pour {product_data.get('Référence', 'produit')}")
+                            logger.info(f"✅ Contexte web enrichi pour {product_data.get('Référence', 'produit')}")
+                    else:
+                        # Fallback: contexte intelligent basé sur la marque
+                        web_context = self._create_enhanced_context(product_data, category)
+                        if web_context:
+                            logger.info(f"💡 Contexte expert (fallback) pour {product_data.get('Référence', 'produit')}")
+                    break # Succès, on sort de la boucle
+                except Exception as e:
+                    logger.warning(f"⚠️ Erreur recherche web (tentative {attempt+1}/3): {e}")
+                    time.sleep(1)
         
         # Récupère les suggestions de produits liés
         related_products = self._get_related_products(category)
@@ -508,15 +516,24 @@ IMPÉRATIF:
 - NE MENTIONNE PAS les modèles de moto compatibles sauf s'ils sont dans les données catalogue
 - Utilise le contexte web uniquement pour les aspects techniques et la réputation de la marque""".format(language=language)
         
-        # Génération
-        logger.info(f"🎨 Génération description {category} en {language}...")
-        
-        description = self.ollama.generate(
-            prompt=prompt,
-            system=system_prompt,
-            temperature=temperature,
-            max_tokens=300  # Optimisé : réduit de 400 à 300 (-25% temps)
-        )
+        # Génération avec Retry
+        description = None
+        for attempt in range(3):
+            try:
+                logger.info(f"🎨 Génération description {category} en {language} (tentative {attempt+1}/3)...")
+                
+                description = self.ollama.generate(
+                    prompt=prompt,
+                    system=system_prompt,
+                    temperature=temperature,
+                    max_tokens=300  # Optimisé : réduit de 400 à 300 (-25% temps)
+                )
+                
+                if description:
+                    break # Succès
+            except Exception as e:
+                logger.warning(f"⚠️ Erreur génération (tentative {attempt+1}/3): {e}")
+                time.sleep(1)
         
         if description:
             # Nettoie la description
@@ -531,7 +548,7 @@ IMPÉRATIF:
             else:
                 logger.info(f"✅ Description générée ({len(description)} caractères, {word_count} mots)")
         else:
-            logger.error("❌ Échec génération description")
+            logger.error("❌ Échec génération description après 3 tentatives")
         
         return description
     
@@ -543,14 +560,7 @@ IMPÉRATIF:
     ) -> Dict:
         """
         Génère description + titre + meta pour un produit (avec cache)
-        
-        Args:
-            product_data: Données produit
-            language: Langue
-            force_regenerate: Forcer régénération
-            
-        Returns:
-            Dict avec description, seo_title, meta_description
+        Utilise le mode JSON d'OpenAI si disponible pour une génération unique et rapide.
         """
         # Vérifier cache d'abord
         if self.cache and not force_regenerate:
@@ -558,7 +568,73 @@ IMPÉRATIF:
             if cached:
                 return cached
         
-        # Générer les 3 éléments
+        # Optimisation OpenAI: Génération unique en JSON
+        if self.provider == "openai" and hasattr(self.client, 'generate_with_json'):
+            try:
+                # Préparation du contexte (similaire à generate_description)
+                category = self._detect_product_category(product_data)
+                product_info = self._extract_product_info(product_data)
+                
+                # Web Search (simplifié pour ce mode)
+                web_context = ""
+                if self.use_web_search and self.web_searcher:
+                    try:
+                        search_result = self.web_searcher.search_product_info(product_data)
+                        if search_result.get('found'):
+                            web_context = f"\nCONTEXTE WEB:\n{search_result.get('context', '')}\n"
+                    except:
+                        pass
+                
+                if not web_context:
+                    web_context = self._create_enhanced_context(product_data, category)
+
+                # Prompt unifié JSON
+                system_prompt = "Tu es un expert SEO e-commerce. Tu dois générer une fiche produit complète au format JSON strict."
+                
+                prompt = f"""Génère le contenu SEO pour ce produit moto ({category}).
+
+DONNÉES PRODUIT:
+{product_info}
+{web_context}
+
+INSTRUCTIONS:
+1. Description: Style Motoblouz, factuel, technique, formatage Markdown (**gras**, • puces). 120-150 mots.
+2. Titre SEO: Accrocheur, < 60 caractères, inclut Marque + Produit.
+3. Meta Description: Incitative, < 160 caractères.
+
+FORMAT DE RÉPONSE ATTENDU (JSON):
+{{
+    "description": "Texte de la description avec formatage Markdown...",
+    "seo_title": "Titre optimisé...",
+    "meta_description": "Meta description..."
+}}
+
+Langue: {language}
+"""
+                # Appel API en mode JSON
+                result_json = self.client.generate_with_json(
+                    prompt=prompt,
+                    system=system_prompt,
+                    temperature=0.7,
+                    max_tokens=1000
+                )
+                
+                if result_json and 'description' in result_json:
+                    # Sauvegarder dans le cache
+                    if self.cache:
+                        self.cache.set(
+                            product_data,
+                            result_json.get('description', ''),
+                            result_json.get('seo_title', ''),
+                            result_json.get('meta_description', ''),
+                            language
+                        )
+                    return result_json
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Échec génération JSON ({e}), fallback sur méthode séquentielle")
+
+        # Fallback: Génération séquentielle (Ollama ou échec JSON)
         description = self.generate_description(product_data, language, force_regenerate=force_regenerate)
         seo_title = self.generate_seo_title(product_data)
         meta_description = self.generate_meta_description(product_data)

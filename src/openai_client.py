@@ -3,9 +3,10 @@ Client OpenAI pour génération de contenu avec GPT
 """
 import os
 import json
+import time
 from typing import Optional, Dict, List
 import logging
-from openai import OpenAI
+from openai import OpenAI, APIError, RateLimitError, TimeoutError, APIConnectionError
 from dotenv import load_dotenv
 
 # Charger variables d'environnement
@@ -96,56 +97,52 @@ class OpenAIClient:
         max_tokens: int = 500
     ) -> Optional[str]:
         """
-        Génère du texte avec OpenAI
-        
-        Args:
-            prompt: Prompt utilisateur
-            system: Instruction système (optionnel)
-            temperature: Créativité (0-1)
-            max_tokens: Longueur maximale
-            
-        Returns:
-            Texte généré ou None si erreur
+        Génère du texte avec OpenAI avec gestion d'erreurs et retries
         """
         if not self.is_available():
             logger.error("OpenAI n'est pas disponible")
             return None
         
-        try:
-            messages = []
-            
-            if system:
-                messages.append({"role": "system", "content": system})
-            
-            messages.append({"role": "user", "content": prompt})
-            
-            # Paramètres de requête
-            request_params = {
-                "model": self.model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens
-            }
-            
-            # OpenRouter nécessite des headers spécifiques
-            if self.is_openrouter:
-                # Pas de extra_headers dans create(), déjà dans le client
-                pass
-            
-            response = self.client.chat.completions.create(**request_params)
-            
-            content = response.choices[0].message.content
-            
-            if content:
-                logger.info(f"✅ Génération réussie ({len(content)} caractères)")
-                return content.strip()
-            else:
-                logger.error("❌ Réponse vide de l'API")
-                return None
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        
+        request_params = {
+            "model": self.model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        
+        # Retry loop manuel pour gérer les erreurs spécifiques
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(**request_params)
+                content = response.choices[0].message.content
                 
-        except Exception as e:
-            logger.error(f"❌ Erreur génération OpenAI: {e}")
-            return None
+                if content:
+                    logger.info(f"✅ Génération réussie ({len(content)} caractères)")
+                    return content.strip()
+                else:
+                    logger.error("❌ Réponse vide de l'API")
+                    return None
+                    
+            except RateLimitError:
+                logger.warning(f"⚠️ Rate Limit atteint (tentative {attempt+1}/{max_retries}). Pause 2s...")
+                time.sleep(2)
+            except (TimeoutError, APIConnectionError) as e:
+                logger.warning(f"⚠️ Erreur réseau: {e} (tentative {attempt+1}/{max_retries}). Pause 1s...")
+                time.sleep(1)
+            except APIError as e:
+                logger.error(f"❌ Erreur API OpenAI: {e}")
+                break # Erreur fatale probable (ex: bad request)
+            except Exception as e:
+                logger.error(f"❌ Erreur inattendue OpenAI: {e}")
+                break
+                
+        return None
     
     def generate_with_json(
         self,

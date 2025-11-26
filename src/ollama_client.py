@@ -149,73 +149,66 @@ class OllamaClient:
         stream: bool = False
     ) -> Optional[str]:
         """
-        Génère du texte avec Ollama
-        
-        Args:
-            prompt: Prompt utilisateur
-            system: Instruction système (optionnel)
-            temperature: Créativité (0-1)
-            max_tokens: Longueur maximale
-            stream: Mode streaming
-            
-        Returns:
-            Texte généré ou None si erreur
+        Génère du texte avec Ollama avec retry
         """
         if not self.available:
             logger.error("Ollama n'est pas disponible")
             return None
         
-        try:
-            payload = {
-                "model": self.model,
-                "prompt": prompt,
-                "stream": stream,
-                "options": {
-                    "temperature": temperature,
-                    "num_predict": max_tokens,
-                    "num_ctx": 2048  # Réduire contexte pour économiser RAM (défaut=4096)
-                }
+        payload = {
+            "model": self.model,
+            "prompt": prompt,
+            "stream": stream,
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens,
+                "num_ctx": 2048
             }
-            
-            if system:
-                payload["system"] = system
-            
-            response = requests.post(
-                f"{self.base_url}/api/generate",
-                json=payload,
-                timeout=300  # Augmenté à 5 minutes pour descriptions longues
-            )
-            
-            if response.status_code == 200:
-                if stream:
-                    # Mode streaming - concatène les réponses
-                    full_response = ""
-                    for line in response.iter_lines():
-                        if line:
-                            data = json.loads(line)
-                            full_response += data.get('response', '')
-                    return full_response
-                else:
-                    # Mode normal
-                    data = response.json()
-                    return data.get('response', '')
-            else:
-                logger.error(f"❌ Erreur Ollama HTTP {response.status_code}: {response.text[:200]}")
-                return None
+        }
+        
+        if system:
+            payload["system"] = system
+        
+        # Retry loop
+        import time
+        max_retries = 3
+        
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    f"{self.base_url}/api/generate",
+                    json=payload,
+                    timeout=300
+                )
                 
-        except requests.exceptions.Timeout:
-            logger.error(f"❌ Timeout génération (>300s). Prompt trop long ou modèle surchargé.")
-            return None
-        except requests.exceptions.ConnectionError:
-            logger.error(f"❌ Connexion Ollama perdue. Vérifiez: ollama serve")
-            self.available = False  # Marquer comme indisponible
-            return None
-        except json.JSONDecodeError as e:
-            logger.error(f"❌ Réponse Ollama invalide (JSON): {str(e)}")
-            return None
-        except Exception as e:
-            logger.error(f"❌ Erreur génération: {type(e).__name__} - {str(e)}")
-            return None
+                if response.status_code == 200:
+                    if stream:
+                        full_response = ""
+                        for line in response.iter_lines():
+                            if line:
+                                data = json.loads(line)
+                                full_response += data.get('response', '')
+                        return full_response
+                    else:
+                        data = response.json()
+                        return data.get('response', '')
+                else:
+                    logger.warning(f"⚠️ Erreur Ollama HTTP {response.status_code} (tentative {attempt+1}/{max_retries})")
+                    time.sleep(1)
+                    
+            except requests.exceptions.Timeout:
+                logger.error(f"❌ Timeout génération (>300s). Prompt trop long ou modèle surchargé.")
+                return None
+            except requests.exceptions.ConnectionError:
+                logger.error(f"❌ Connexion Ollama perdue. Vérifiez: ollama serve")
+                self.available = False
+                return None
+            except Exception as e:
+                logger.warning(f"⚠️ Erreur génération: {e} (tentative {attempt+1}/{max_retries})")
+                time.sleep(1)
+                
+        logger.error("❌ Échec génération Ollama après 3 tentatives")
+        return None
     
     def chat(
         self,

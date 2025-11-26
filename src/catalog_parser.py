@@ -39,8 +39,16 @@ class CatalogParser:
             )
             self.headers = self.df.columns.tolist()
             
-            # Nettoie les noms de colonnes
-            self.df.columns = [str(col).strip() for col in self.df.columns]
+            # Nettoie et normalise les noms de colonnes
+            self.df.columns = [
+                str(col).lower().strip()
+                .replace(' ', '_')
+                .replace('-', '_')
+                .replace('/', '_')
+                .replace("'", "")
+                .replace('"', "")
+                for col in self.df.columns
+            ]
             self.headers = self.df.columns.tolist()
             
             print(f"✓ Catalogue chargé: {len(self.df)} lignes, {len(self.headers)} colonnes")

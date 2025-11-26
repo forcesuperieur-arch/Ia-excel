@@ -24,8 +24,11 @@ class ColumnMatcher:
         Args:
             model_name: Nom du modèle sentence-transformers à utiliser
         """
-        print(f"🔄 Chargement du modèle IA local: {model_name}")
-        self.model = SentenceTransformer(model_name)
+        import torch
+        # Déterminer le meilleur appareil (GPU/CPU)
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        print(f"🔄 Chargement du modèle IA local: {model_name} sur {device}")
+        self.model = SentenceTransformer(model_name, device=device)
         self.normalizer = ColumnNormalizer()
         
         # Fichier d'apprentissage pour stocker les correspondances validées

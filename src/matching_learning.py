@@ -1,37 +1,17 @@
 """
-Système d'apprentissage pour améliorer le matching de colonnes
+Système d'apprentissage pour améliorer le matching de colonnes (SQLite)
 """
-import json
-from pathlib import Path
-from typing import Dict, List, Optional
 from datetime import datetime
+from typing import Dict, Optional
+from .database import DatabaseManager
 
 
 class MatchingLearning:
-    """Gère l'apprentissage des corrections manuelles de matching"""
+    """Gère l'apprentissage des corrections manuelles de matching via SQLite"""
     
-    def __init__(self, learning_file: str = "templates/matching_history.json"):
-        """
-        Initialise le système d'apprentissage
-        
-        Args:
-            learning_file: Fichier JSON pour stocker l'historique
-        """
-        self.learning_file = Path(learning_file)
-        self.learning_file.parent.mkdir(exist_ok=True)
-        self.history = self._load_history()
-    
-    def _load_history(self) -> Dict:
-        """Charge l'historique d'apprentissage"""
-        if self.learning_file.exists():
-            with open(self.learning_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        return {"corrections": [], "patterns": {}}
-    
-    def _save_history(self):
-        """Sauvegarde l'historique"""
-        with open(self.learning_file, 'w', encoding='utf-8') as f:
-            json.dump(self.history, f, indent=2, ensure_ascii=False)
+    def __init__(self):
+        """Initialise le système d'apprentissage avec la base de données"""
+        self.db = DatabaseManager()
     
     def add_correction(
         self,
@@ -42,53 +22,67 @@ class MatchingLearning:
     ):
         """
         Enregistre une correction manuelle
-        
-        Args:
-            source_column: Nom de la colonne source (catalogue)
-            target_column: Nom de la colonne cible (template)
-            template_name: Nom du template utilisé
-            confidence_before: Confiance IA avant correction
         """
-        correction = {
-            "timestamp": datetime.now().isoformat(),
-            "source": source_column.lower().strip(),
-            "target": target_column.lower().strip(),
-            "template": template_name,
-            "confidence_before": confidence_before
-        }
-        
-        self.history["corrections"].append(correction)
-        
-        # Met à jour les patterns
-        key = self._normalize(source_column)
-        if key not in self.history["patterns"]:
-            self.history["patterns"][key] = []
-        
-        # Ajoute le mapping s'il n'existe pas déjà
-        if target_column not in self.history["patterns"][key]:
-            self.history["patterns"][key].append(target_column)
-        
-        self._save_history()
-        print(f"✓ Correction enregistrée: {source_column} → {target_column}")
+        try:
+            # 1. Enregistrer l'historique
+            self.db.execute_update(
+                """
+                INSERT INTO learning_corrections 
+                (timestamp, source_column, target_column, template_name, confidence_before)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    datetime.now(),
+                    source_column.lower().strip(),
+                    target_column.lower().strip(),
+                    template_name,
+                    confidence_before
+                )
+            )
+            
+            # 2. Mettre à jour le pattern (Upsert simplifié)
+            key = self._normalize(source_column)
+            
+            # Vérifier si existe déjà
+            existing = self.db.execute_query(
+                "SELECT frequency FROM learning_patterns WHERE source_key = ? AND target_column = ?",
+                (key, target_column)
+            )
+            
+            if existing:
+                # Update frequency
+                self.db.execute_update(
+                    "UPDATE learning_patterns SET frequency = frequency + 1, last_used = ? WHERE source_key = ? AND target_column = ?",
+                    (datetime.now(), key, target_column)
+                )
+            else:
+                # Insert new
+                self.db.execute_update(
+                    "INSERT INTO learning_patterns (source_key, target_column, frequency, last_used) VALUES (?, ?, 1, ?)",
+                    (key, target_column, datetime.now())
+                )
+            
+            print(f"✓ Correction enregistrée: {source_column} → {target_column}")
+            
+        except Exception as e:
+            print(f"❌ Erreur enregistrement correction: {e}")
     
     def get_suggestion(self, source_column: str) -> Optional[str]:
         """
         Récupère une suggestion basée sur l'historique
-        
-        Args:
-            source_column: Nom de la colonne source
-            
-        Returns:
-            Suggestion de colonne cible ou None
         """
         key = self._normalize(source_column)
         
-        if key in self.history["patterns"]:
+        try:
             # Retourne la suggestion la plus fréquente
-            suggestions = self.history["patterns"][key]
-            return suggestions[0] if suggestions else None
-        
-        return None
+            rows = self.db.execute_query(
+                "SELECT target_column FROM learning_patterns WHERE source_key = ? ORDER BY frequency DESC LIMIT 1",
+                (key,)
+            )
+            return rows[0]['target_column'] if rows else None
+        except Exception as e:
+            print(f"❌ Erreur lecture suggestion: {e}")
+            return None
     
     def _normalize(self, column_name: str) -> str:
         """Normalise un nom de colonne pour la comparaison"""
@@ -97,45 +91,54 @@ class MatchingLearning:
     def get_learning_context(self, max_examples: int = 20) -> str:
         """
         Génère un contexte d'apprentissage pour le prompt IA
-        
-        Args:
-            max_examples: Nombre maximum d'exemples à inclure
-            
-        Returns:
-            Texte formaté avec les exemples d'apprentissage
         """
-        if not self.history["corrections"]:
+        try:
+            rows = self.db.execute_query(
+                "SELECT source_column, target_column FROM learning_corrections ORDER BY timestamp DESC LIMIT ?",
+                (max_examples,)
+            )
+            
+            if not rows:
+                return ""
+            
+            context = "\n**Exemples d'apprentissage (corrections validées) :**\n"
+            for row in rows:
+                context += f"- '{row['source_column']}' → '{row['target_column']}'\n"
+            
+            return context
+        except Exception as e:
+            print(f"❌ Erreur lecture contexte: {e}")
             return ""
-        
-        # Prend les corrections les plus récentes
-        recent = self.history["corrections"][-max_examples:]
-        
-        context = "\n**Exemples d'apprentissage (corrections validées) :**\n"
-        for corr in recent:
-            context += f"- '{corr['source']}' → '{corr['target']}'\n"
-        
-        return context
     
     def get_statistics(self) -> Dict:
         """Retourne des statistiques sur l'apprentissage"""
-        total_corrections = len(self.history["corrections"])
-        unique_patterns = len(self.history["patterns"])
-        
-        # Templates les plus utilisés
-        templates = {}
-        for corr in self.history["corrections"]:
-            tmpl = corr.get("template", "Unknown")
-            templates[tmpl] = templates.get(tmpl, 0) + 1
-        
-        return {
-            "total_corrections": total_corrections,
-            "unique_patterns": unique_patterns,
-            "templates": templates,
-            "last_correction": self.history["corrections"][-1] if self.history["corrections"] else None
-        }
+        try:
+            total_corrections = self.db.execute_query("SELECT COUNT(*) as c FROM learning_corrections")[0]['c']
+            unique_patterns = self.db.execute_query("SELECT COUNT(*) as c FROM learning_patterns")[0]['c']
+            
+            # Templates les plus utilisés
+            tmpl_rows = self.db.execute_query("SELECT template_name, COUNT(*) as c FROM learning_corrections GROUP BY template_name")
+            templates = {r['template_name'] or "Unknown": r['c'] for r in tmpl_rows}
+            
+            # Dernière correction
+            last_rows = self.db.execute_query("SELECT * FROM learning_corrections ORDER BY timestamp DESC LIMIT 1")
+            last_correction = dict(last_rows[0]) if last_rows else None
+            
+            return {
+                "total_corrections": total_corrections,
+                "unique_patterns": unique_patterns,
+                "templates": templates,
+                "last_correction": last_correction
+            }
+        except Exception as e:
+            print(f"❌ Erreur stats apprentissage: {e}")
+            return {"total_corrections": 0, "unique_patterns": 0}
     
     def clear_history(self):
         """Efface tout l'historique d'apprentissage"""
-        self.history = {"corrections": [], "patterns": {}}
-        self._save_history()
-        print("✓ Historique d'apprentissage effacé")
+        try:
+            self.db.execute_update("DELETE FROM learning_corrections")
+            self.db.execute_update("DELETE FROM learning_patterns")
+            print("✓ Historique d'apprentissage effacé")
+        except Exception as e:
+            print(f"❌ Erreur effacement historique: {e}")
