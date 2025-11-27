@@ -105,13 +105,24 @@ class SEOCache:
             count_row = self.db.execute_query("SELECT COUNT(*) as count FROM cache_seo")[0]
             total_entries = count_row['count']
             
-            # Taille approximative du fichier DB (pas juste la table, mais bon indicateur)
-            db_size = self.db.db_path.stat().st_size / 1024 if self.db.db_path.exists() else 0
+            # Statistiques de la table PostgreSQL
+            stats_row = self.db.execute_query("""
+                SELECT 
+                    pg_total_relation_size('cache_seo') as size_bytes,
+                    relname
+                FROM pg_class 
+                WHERE relname = 'cache_seo'
+            """)
+            
+            db_size_kb = 0
+            table_name = "PostgreSQL (Supabase)"
+            if stats_row:
+                db_size_kb = stats_row[0]['size_bytes'] / 1024 if stats_row[0]['size_bytes'] else 0
             
             return {
                 'total_entries': total_entries,
-                'cache_file': str(self.db.db_path),
-                'cache_size_kb': db_size
+                'cache_file': table_name,
+                'cache_size_kb': db_size_kb
             }
         except Exception as e:
             logger.error(f"❌ Erreur stats cache: {e}")
