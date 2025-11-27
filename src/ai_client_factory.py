@@ -5,14 +5,16 @@ from .ollama_client import OllamaClient
 
 
 def _get_secret(key: str, default: str = "") -> str:
-    """Récupère un secret depuis st.secrets ou os.environ"""
+    """Récupère un secret depuis os.environ (Cloud Run) ou st.secrets (Streamlit Cloud)"""
+    if key in os.environ:
+        return os.environ[key]
     try:
         import streamlit as st
         if key in st.secrets:
             return st.secrets[key]
     except:
         pass
-    return os.getenv(key, default)
+    return default
 
 
 class AIClientFactory:

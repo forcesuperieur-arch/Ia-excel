@@ -31,18 +31,24 @@ from src.matching_learning import MatchingLearning
 
 def get_secret(key: str, default: str = "") -> str:
     """
-    Récupère un secret depuis st.secrets (Streamlit Cloud) ou os.environ (local).
-    Compatible avec les deux environnements.
+    Récupère un secret depuis:
+    1. os.environ (Cloud Run - variables d'environnement)
+    2. st.secrets (Streamlit Cloud - secrets.toml)
+    3. default (valeur par défaut)
     """
-    # 1. Essayer st.secrets (Streamlit Cloud)
+    # 1. D'abord essayer les variables d'environnement (Cloud Run)
+    if key in os.environ:
+        return os.environ[key]
+    
+    # 2. Puis st.secrets (Streamlit Cloud)
     try:
         if key in st.secrets:
             return st.secrets[key]
     except (FileNotFoundError, KeyError):
         pass
     
-    # 2. Fallback sur les variables d'environnement
-    return os.getenv(key, default)
+    # 3. Fallback sur la valeur par défaut
+    return default
 
 
 def load_css():

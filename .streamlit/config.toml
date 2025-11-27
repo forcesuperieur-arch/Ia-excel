@@ -16,3 +16,9 @@ runOnSave = true
 gatherUsageStats = false
 serverAddress = "0.0.0.0"
 serverPort = 8501
+
+[client]
+showErrorDetails = false
+
+[logger]
+level = "error"
