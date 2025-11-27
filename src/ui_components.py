@@ -9,6 +9,7 @@ import re
 import time
 from io import BytesIO
 import logging
+import hashlib
 
 # Configuration des logs
 LOG_FILE = "app.log"
@@ -1950,13 +1951,122 @@ Tu respectes:
                                     st.markdown(generated, unsafe_allow_html=True)
                                 
                                 st.divider()
-                                st.markdown("### 📋 Copier la nouvelle version")
-                                st.code(generated, language=None)
-                                st.info("💡 Sélectionnez et copiez le texte ci-dessus (Ctrl+C)")
+                                
+                                # Sauvegarder en historique et créer les actions de téléchargement
+                                cache_key = hashlib.md5(
+                                    f"{new_product_name}_{template_description}".encode()
+                                ).hexdigest()
+                                
+                                history_entry = {
+                                    "timestamp": datetime.now().isoformat(timespec='seconds'),
+                                    "product_name": new_product_name,
+                                    "product_url": new_product_url,
+                                    "template_size": len(template_description),
+                                    "generated_size": len(generated),
+                                    "format_type": template_structure.get('format_type', 'plain'),
+                                    "cache_key": cache_key,
+                                    "content": generated
+                                }
+                                
+                                hist = st.session_state.get("format_history", [])
+                                hist.append(history_entry)
+                                st.session_state.format_history = hist[-50:]
+                                
+                                st.success("✅ Ajoutée à l'historique")
+                                
+                                # Boutons d'action
+                                st.markdown("### 📋 Actions")
+                                col_txt, col_dl, col_copy = st.columns(3)
+                                
+                                with col_txt:
+                                    st.text_area(
+                                        "Copier le contenu",
+                                        generated,
+                                        height=150,
+                                        disabled=True,
+                                        label_visibility="collapsed",
+                                        key="generated_copy_area"
+                                    )
+                                
+                                with col_dl:
+                                    # Télécharger en TXT
+                                    st.download_button(
+                                        label="📥 Télécharger (TXT)",
+                                        data=generated,
+                                        file_name=f"description_{new_product_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                                        mime="text/plain",
+                                        use_container_width=True
+                                    )
+                                    
+                                    # Télécharger en HTML si format HTML
+                                    if template_structure.get('format_type') == 'html':
+                                        html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{new_product_name}</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+    </style>
+</head>
+<body>
+{generated}
+</body>
+</html>"""
+                                        st.download_button(
+                                            label="🌐 Télécharger (HTML)",
+                                            data=html_content,
+                                            file_name=f"description_{new_product_name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html",
+                                            mime="text/html",
+                                            use_container_width=True
+                                        )
+                                
+                                with col_copy:
+                                    st.markdown("**💾 Historique**")
+                                    if st.session_state.get("format_history"):
+                                        st.caption(f"📚 {len(st.session_state.format_history)} générations sauvegardées")
+                                        if st.button("📊 Voir l'historique →", use_container_width=True, key="show_format_history"):
+                                            st.session_state.show_format_history = True
                     
                     except Exception as e:
                         st.error(f"❌ Erreur: {str(e)}")
                         logger.error(f"Format template error: {str(e)}")
+    
+    # Afficher l'historique si demandé
+    if st.session_state.get("show_format_history"):
+        st.divider()
+        st.markdown("### 📚 Historique des Générations (Format Template)")
+        
+        format_history = st.session_state.get("format_history", [])
+        if format_history:
+            for i, entry in enumerate(reversed(format_history), 1):
+                idx = len(format_history) - i
+                with st.expander(f"#{idx+1} - {entry['product_name']} ({entry['timestamp']})"):
+                    col_h1, col_h2, col_h3 = st.columns(3)
+                    
+                    with col_h1:
+                        st.metric("Format", entry['format_type'].upper())
+                    with col_h2:
+                        st.metric("Caractères", entry['generated_size'])
+                    with col_h3:
+                        st.metric("Template", entry['template_size'])
+                    
+                    st.caption(f"🔗 Produit: {entry['product_url']}")
+                    
+                    # Boutons d'action sur chaque entrée
+                    col_restore, col_view = st.columns(2)
+                    with col_restore:
+                        if st.button("📋 Copier le contenu", key=f"copy_hist_{idx}"):
+                            st.write(entry['content'])
+                    with col_view:
+                        if st.button("👁️ Voir le contenu", key=f"view_hist_{idx}"):
+                            st.markdown(entry['content'], unsafe_allow_html=True)
+        else:
+            st.info("ℹ️ Aucune génération de format pour l'instant")
+        
+        if st.button("✕ Fermer l'historique", use_container_width=True):
+            st.session_state.show_format_history = False
+            st.rerun()
     
     else:
         # Mode génération IA
