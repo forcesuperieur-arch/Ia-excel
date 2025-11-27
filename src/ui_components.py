@@ -40,14 +40,19 @@ def get_secret(key: str, default: str = "") -> str:
     if key in os.environ:
         return os.environ[key]
     
-    # 2. Puis st.secrets (Streamlit Cloud)
+    # 2. Puis st.secrets (Streamlit Cloud) - silence les erreurs
     try:
-        if key in st.secrets:
-            return st.secrets[key]
-    except (FileNotFoundError, KeyError):
+        import streamlit as st
+        # Silencieux - récupère sans déclencher d'avertissement
+        if hasattr(st, 'secrets') and isinstance(st.secrets, dict):
+            if key in st.secrets:
+                return st.secrets[key]
+    except Exception:
+        # Ignore toute erreur Streamlit
         pass
     
     # 3. Fallback sur la valeur par défaut
+    return default
     return default
 
 

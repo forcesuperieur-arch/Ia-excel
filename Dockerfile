@@ -20,6 +20,11 @@ RUN pip install --no-cache-dir -r requirements-gcloud.txt
 # Copier le reste de l'application
 COPY . .
 
+# Créer un secrets.toml vide pour éviter les avertissements Streamlit sur Cloud Run
+RUN mkdir -p /root/.streamlit && \
+    echo "# Cloud Run: Secrets depuis variables d'environnement\nDUMMY = \"true\"" > /root/.streamlit/secrets.toml && \
+    chmod 600 /root/.streamlit/secrets.toml
+
 # Configuration Streamlit pour Cloud Run
 ENV STREAMLIT_SERVER_HEADLESS=true
 ENV STREAMLIT_SERVER_PORT=8080

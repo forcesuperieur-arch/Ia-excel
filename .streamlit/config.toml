@@ -19,6 +19,11 @@ serverPort = 8501
 
 [client]
 showErrorDetails = false
+showWarningOnDirectExecution = false
 
 [logger]
-level = "error"
+level = "critical"
+
+[secrets]
+# Disable secrets file warnings
+enableSecretsWarning = false

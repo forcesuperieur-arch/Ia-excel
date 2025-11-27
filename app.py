@@ -4,6 +4,13 @@ Interface web moderne pour le traitement intelligent de catalogues Excel
 Version 2.0 - Design repensé avec OpenRouter/OpenAI
 """
 import streamlit as st
+import os
+
+# Désactiver l'avertissement Streamlit sur les secrets manquants sur Cloud Run
+# Les secrets sont stockés dans les variables d'environnement (os.environ)
+import warnings
+warnings.filterwarnings('ignore', category=FileNotFoundError)
+
 from src.ui_components import (
     load_css,
     init_session_state,
