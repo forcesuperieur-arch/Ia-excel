@@ -1471,95 +1471,231 @@ def phase_complete():
     
     output_path = st.session_state.output_path
     
+    # Ajouter à l'historique
+    if output_path and os.path.exists(output_path):
+        catalog_history = st.session_state.get("catalog_history", [])
+        
+        # Vérifier si ce fichier n'est pas déjà dans l'historique
+        file_hash = hashlib.md5(str(output_path).encode()).hexdigest()
+        if not any(h.get('file_hash') == file_hash for h in catalog_history):
+            df_current = pd.read_excel(output_path)
+            
+            history_entry = {
+                "timestamp": datetime.now().isoformat(timespec='seconds'),
+                "file_path": output_path,
+                "file_name": os.path.basename(output_path),
+                "file_hash": file_hash,
+                "product_count": len(df_current),
+                "columns": list(df_current.columns),
+                "file_size_kb": os.path.getsize(output_path) / 1024
+            }
+            
+            catalog_history.append(history_entry)
+            st.session_state.catalog_history = catalog_history[-50:]  # Garder les 50 derniers
+    
     if os.path.exists(output_path):
-        # Vue catalogue avant téléchargement
-        with st.expander("📊 Aperçu & Filtres du catalogue généré", expanded=False):
+        # Onglets principal et historique
+        tab_current, tab_history = st.tabs(["📄 Fichier Actuel", "📚 Historique des Catalogues"])
+        
+        with tab_current:
+            # Vue catalogue avant téléchargement
+            with st.expander("📊 Aperçu & Filtres du catalogue généré", expanded=False):
+                try:
+                    df = pd.read_excel(output_path)
+                    
+                    # Filtres
+                    col_search, col_filter = st.columns([2, 1])
+                    with col_search:
+                        search_term = st.text_input("🔍 Rechercher (Référence, Libellé, Marque...)", "", key="catalog_search")
+                    with col_filter:
+                        filter_col = st.selectbox("Filtrer par colonne", ["Toutes"] + list(df.columns), key="catalog_filter_col")
+                    
+                    # Appliquer recherche
+                    df_filtered = df.copy()
+                    if search_term:
+                        mask = df_filtered.astype(str).apply(lambda row: row.str.contains(search_term, case=False, na=False).any(), axis=1)
+                        df_filtered = df_filtered[mask]
+                    
+                    st.caption(f"📄 {len(df_filtered)} produits affichés sur {len(df)}")
+                    
+                    # Tableau interactif
+                    st.dataframe(
+                        df_filtered,
+                        use_container_width=True,
+                        hide_index=True,
+                        height=400,
+                    )
+                    
+                    # Export CSV filtré
+                    if len(df_filtered) < len(df):
+                        csv_bytes = BytesIO(df_filtered.to_csv(index=False).encode("utf-8"))
+                        st.download_button(
+                            "⬇️ Télécharger la sélection filtrée (CSV)",
+                            data=csv_bytes,
+                            file_name=f"catalogue_filtre_{len(df_filtered)}_produits.csv",
+                            mime="text/csv",
+                            use_container_width=True
+                        )
+                except Exception as e:
+                    st.error(f"❌ Erreur d'affichage: {e}")
+            
+            st.divider()
+            
+            # Statistiques du fichier
+            col_stat1, col_stat2, col_stat3 = st.columns(3)
+            
             try:
-                df = pd.read_excel(output_path)
+                df_stats = pd.read_excel(output_path)
+                file_size = os.path.getsize(output_path)
                 
-                # Filtres
-                col_search, col_filter = st.columns([2, 1])
-                with col_search:
-                    search_term = st.text_input("🔍 Rechercher (Référence, Libellé, Marque...)", "", key="catalog_search")
-                with col_filter:
-                    filter_col = st.selectbox("Filtrer par colonne", ["Toutes"] + list(df.columns), key="catalog_filter_col")
-                
-                # Appliquer recherche
-                df_filtered = df.copy()
-                if search_term:
-                    mask = df_filtered.astype(str).apply(lambda row: row.str.contains(search_term, case=False, na=False).any(), axis=1)
-                    df_filtered = df_filtered[mask]
-                
-                st.caption(f"📄 {len(df_filtered)} produits affichés sur {len(df)}")
-                
-                # Tableau interactif
-                st.dataframe(
-                    df_filtered,
-                    use_container_width=True,
-                    hide_index=True,
-                    height=400,
-                )
-                
-                # Export CSV filtré
-                if len(df_filtered) < len(df):
-                    csv_bytes = BytesIO(df_filtered.to_csv(index=False).encode("utf-8"))
+                with col_stat1:
+                    st.metric("📦 Produits", len(df_stats))
+                with col_stat2:
+                    st.metric("📋 Colonnes", len(df_stats.columns))
+                with col_stat3:
+                    st.metric("💾 Taille", f"{file_size / 1024:.1f} KB")
+            except:
+                pass
+            
+            st.divider()
+            
+            col_dl1, col_dl2, col_dl3 = st.columns(3)
+            
+            with col_dl1:
+                with open(output_path, "rb") as f:
                     st.download_button(
-                        "⬇️ Télécharger la sélection filtrée (CSV)",
+                        label="📥 Télécharger Excel",
+                        data=f,
+                        file_name=os.path.basename(output_path),
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
+            
+            with col_dl2:
+                # Export CSV
+                try:
+                    df_export = pd.read_excel(output_path)
+                    csv_bytes = BytesIO(df_export.to_csv(index=False).encode("utf-8"))
+                    st.download_button(
+                        label="📄 Télécharger CSV",
                         data=csv_bytes,
-                        file_name=f"catalogue_filtre_{len(df_filtered)}_produits.csv",
+                        file_name=os.path.basename(output_path).replace('.xlsx', '.csv'),
                         mime="text/csv",
                         use_container_width=True
                     )
-            except Exception as e:
-                st.error(f"❌ Erreur d'affichage: {e}")
+                except:
+                    st.button("📄 Télécharger CSV", disabled=True, use_container_width=True)
+            
+            with col_dl3:
+                # Export ZIP des RTF
+                if st.button("📦 ZIP (Word RTF)", use_container_width=True):
+                    try:
+                        import zipfile
+                        
+                        df = pd.read_excel(output_path)
+                        zip_buffer = BytesIO()
+                        
+                        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+                            for _, row in df.iterrows():
+                                if 'Description SEO' in row and pd.notna(row['Description SEO']):
+                                    ref = str(row.get('Référence', 'REF')).replace('/', '-')
+                                    marque = str(row.get('Marque', 'MARQUE')).replace('/', '-')
+                                    filename = f"{marque}_{ref}.rtf"
+                                    rtf_content = format_description_for_word(row['Description SEO'])
+                                    zip_file.writestr(filename, rtf_content)
+                        
+                        st.download_button(
+                            label="⬇️ Télécharger ZIP",
+                            data=zip_buffer.getvalue(),
+                            file_name="descriptions_word.zip",
+                            mime="application/zip",
+                            use_container_width=True
+                        )
+                    except Exception as e:
+                        st.error(f"❌ Erreur ZIP: {e}")
+            
+            st.divider()
+            st.caption(f"📍 **Fichier:** `{os.path.basename(output_path)}`")
         
-        st.divider()
-        
-        col_dl1, col_dl2 = st.columns(2)
-        
-        with col_dl1:
-            with open(output_path, "rb") as f:
-                st.download_button(
-                    label="📥 Télécharger le fichier Excel",
-                    data=f,
-                    file_name=os.path.basename(output_path),
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True
-                )
-        
-        with col_dl2:
-            # Export ZIP des RTF
-            if st.button("📦 Télécharger tout (ZIP Word)", use_container_width=True):
-                try:
-                    import zipfile
+        with tab_history:
+            st.markdown("### 📚 Historique des Catalogues Générés")
+            
+            catalog_history = st.session_state.get("catalog_history", [])
+            
+            if catalog_history:
+                # Statistiques
+                col_h_stat1, col_h_stat2, col_h_stat3 = st.columns(3)
+                
+                with col_h_stat1:
+                    st.metric("📊 Total générations", len(catalog_history))
+                
+                with col_h_stat2:
+                    total_products = sum(h.get('product_count', 0) for h in catalog_history)
+                    st.metric("📦 Produits traités", total_products)
+                
+                with col_h_stat3:
+                    total_size = sum(h.get('file_size_kb', 0) for h in catalog_history)
+                    st.metric("💾 Espace total", f"{total_size:.1f} KB")
+                
+                st.divider()
+                
+                # Liste des générations
+                st.markdown("**Vos générations précédentes:**")
+                
+                for i, entry in enumerate(reversed(catalog_history), 1):
+                    idx = len(catalog_history) - i
                     
-                    df = pd.read_excel(output_path)
-                    zip_buffer = BytesIO()
-                    
-                    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-                        for _, row in df.iterrows():
-                            if 'Description SEO' in row and pd.notna(row['Description SEO']):
-                                # Nom du fichier: Marque_Reference.rtf
-                                ref = str(row.get('Référence', 'REF')).replace('/', '-')
-                                marque = str(row.get('Marque', 'MARQUE')).replace('/', '-')
-                                filename = f"{marque}_{ref}.rtf"
-                                
-                                # Contenu RTF
-                                rtf_content = format_description_for_word(row['Description SEO'])
-                                zip_file.writestr(filename, rtf_content)
-                    
-                    st.download_button(
-                        label="⬇️ Cliquer pour télécharger le ZIP",
-                        data=zip_buffer.getvalue(),
-                        file_name="descriptions_word.zip",
-                        mime="application/zip",
-                        use_container_width=True
-                    )
-                except Exception as e:
-                    st.error(f"Erreur ZIP: {e}")
-        
-        st.info(f"💾 **Fichier:** `{os.path.basename(output_path)}`")
-        st.caption(f"📍 **Emplacement:** `{output_path}`")
+                    with st.expander(f"#{idx+1} - {entry['file_name']} ({entry['timestamp']})"):
+                        col_info1, col_info2, col_info3, col_info4 = st.columns(4)
+                        
+                        with col_info1:
+                            st.metric("📦 Produits", entry['product_count'])
+                        with col_info2:
+                            st.metric("📋 Colonnes", len(entry['columns']))
+                        with col_info3:
+                            st.metric("💾 Taille", f"{entry['file_size_kb']:.1f} KB")
+                        with col_info4:
+                            st.metric("🕐 Date", entry['timestamp'].split('T')[0])
+                        
+                        st.caption(f"**Colonnes:** {', '.join(entry['columns'][:5])}..." if len(entry['columns']) > 5 else f"**Colonnes:** {', '.join(entry['columns'])}")
+                        
+                        # Boutons d'action
+                        col_action1, col_action2 = st.columns(2)
+                        
+                        with col_action1:
+                            if os.path.exists(entry['file_path']):
+                                with open(entry['file_path'], "rb") as f:
+                                    st.download_button(
+                                        label="📥 Télécharger Excel",
+                                        data=f,
+                                        file_name=entry['file_name'],
+                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                        key=f"dl_hist_excel_{idx}",
+                                        use_container_width=True
+                                    )
+                            else:
+                                st.info("❌ Fichier non trouvé sur le serveur")
+                        
+                        with col_action2:
+                            if os.path.exists(entry['file_path']):
+                                try:
+                                    df_hist = pd.read_excel(entry['file_path'])
+                                    csv_bytes = BytesIO(df_hist.to_csv(index=False).encode("utf-8"))
+                                    st.download_button(
+                                        label="📄 Télécharger CSV",
+                                        data=csv_bytes,
+                                        file_name=entry['file_name'].replace('.xlsx', '.csv'),
+                                        mime="text/csv",
+                                        key=f"dl_hist_csv_{idx}",
+                                        use_container_width=True
+                                    )
+                                except:
+                                    st.button("📄 Télécharger CSV", disabled=True, use_container_width=True, key=f"dl_hist_csv_err_{idx}")
+            else:
+                st.info("ℹ️ Aucun catalogue généré pour l'instant")
+    
+    else:
+        st.error("❌ Fichier de sortie non trouvé")
 
 
 def seo_testing_tab(config):
