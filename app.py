@@ -6,10 +6,9 @@ Version 2.0 - Design repensé avec OpenRouter/OpenAI
 import streamlit as st
 import os
 
-# Désactiver l'avertissement Streamlit sur les secrets manquants sur Cloud Run
-# Les secrets sont stockés dans les variables d'environnement (os.environ)
+# Désactiver les avertissements inutiles
 import warnings
-warnings.filterwarnings('ignore', category=FileNotFoundError)
+warnings.filterwarnings('ignore')  # Ignorer tous les warnings (plus sûr)
 
 # ✅ Initialiser le logging AVANT tout
 from src.logger_config import LoggerConfig

@@ -813,98 +813,210 @@ def sidebar_config(disable_nav: bool = False):
     disable_nav=True pour masquer la nav quand utilisé en pages.
     """
     with st.sidebar:
-        # Navigation principale
-        nav = None
-        if not disable_nav:
-            st.markdown("### 🧭 Navigation")
-            nav = st.radio(
-                label="Navigation",
-                options=["📊 Traitement Catalogue", "🧪 Test SEO", "⚙️ Paramètres"],
-                index=0,
-                label_visibility="collapsed",
-            )
-            st.divider()
-        st.markdown("## ⚙️ Configuration")
+        # En-tête
+        st.markdown("## 🚀 IA-Excel Pro")
         
-        # API Key (Gestion sécurisée en mémoire/session uniquement)
-        # Ne jamais stocker la clé sur le disque dans config.json
+        # Onglets sidebar
+        sidebar_tabs = st.tabs(["🧭 Nav", "⚙️ Config", "📊 Logs"])
         
-        # Récupérer depuis st.secrets (Streamlit Cloud), l'environnement ou la session
-        env_key = get_secret("OPENAI_API_KEY", "")
-        session_key = st.session_state.get("api_key", "")
-        current_key = session_key or env_key
-        
-        api_key = st.text_input(
-            "🔑 Clé API",
-            type="password",
-            value=current_key,
-            help="Votre clé OpenAI ou OpenRouter (non stockée sur disque)"
-        )
-        
-        # Validation visuelle de la clé
-        if api_key:
-            if api_key.startswith("sk-or-"):
-                st.success("✅ OpenRouter")
-            elif api_key.startswith("sk-proj-"):
-                st.success("✅ OpenAI Project")
-            elif api_key.startswith("sk-"):
-                st.success("✅ OpenAI")
-            else:
-                st.info("🔑 Clé API configurée")
+        with sidebar_tabs[0]:  # Navigation
+            st.markdown("**Navigation Principale**")
             
-            # Mettre à jour l'environnement et la session pour cette exécution
-            os.environ["OPENAI_API_KEY"] = api_key
-            st.session_state["api_key"] = api_key
-        
-        st.divider()
-        
-        # Templates
-        st.markdown("### 📋 Templates")
-        
-        templates = st.session_state.template_manager.list_templates()
-        
-        if templates:
-            options = ["Aucun"] + [t["name"] for t in templates]
-            selected_name = st.selectbox(
-                "Template actif",
-                options,
-                index=0 if not st.session_state.selected_template else 
-                      next((i+1 for i, t in enumerate(templates) 
-                            if t["id"] == st.session_state.selected_template), 0)
-            )
-            
-            if selected_name != "Aucun":
-                template = next(t for t in templates if t["name"] == selected_name)
-                st.session_state.selected_template = template["id"]
-                st.session_state.use_template = True
-                st.success(f"✅ {selected_name}")
-            else:
-                st.session_state.selected_template = None
-                st.session_state.use_template = False
-        
-        # Upload nouveau template
-        with st.expander("➕ Ajouter template"):
-            uploaded = st.file_uploader("Fichier Excel", type=["xlsx", "xls"], key="template_upload")
-            if uploaded:
-                name = st.text_input("Nom", value=Path(uploaded.name).stem)
-                if st.button("💾 Sauvegarder", use_container_width=True):
-                    temp_path = Path("templates") / f"temp_{uploaded.name}"
-                    with open(temp_path, "wb") as f:
-                        f.write(uploaded.getbuffer())
-                    
+            nav = None
+            if not disable_nav:
+                nav = st.radio(
+                    label="Page",
+                    options=["📊 Traitement Catalogue", "🧪 Test SEO", "⚙️ Paramètres"],
+                    index=0,
+                    label_visibility="collapsed",
+                    key="main_nav"
+                )
+                
+                st.divider()
+                
+                # Quick stats
+                st.markdown("**📈 Statistiques**")
+                col_s1, col_s2 = st.columns(2)
+                
+                with col_s1:
                     try:
-                        st.session_state.template_manager.add_template(
-                            str(temp_path),
-                            name=name,
-                            set_as_default=not templates
+                        from src.seo_cache import SEOCache
+                        cache = SEOCache()
+                        stats = cache.stats()
+                        st.metric("Cache", f"{stats.get('total_entries', 0)}")
+                    except:
+                        st.metric("Cache", "—")
+                
+                with col_s2:
+                    hist_count = len(st.session_state.get("catalog_history", []))
+                    st.metric("Catalogues", hist_count)
+        
+        with sidebar_tabs[1]:  # Configuration
+            st.markdown("**Configuration API & Templates**")
+            
+            # API Key
+            st.markdown("### 🔑 Clé API")
+            
+            env_key = get_secret("OPENAI_API_KEY", "")
+            session_key = st.session_state.get("api_key", "")
+            current_key = session_key or env_key
+            
+            api_key = st.text_input(
+                "API Key",
+                type="password",
+                value=current_key,
+                help="OpenAI ou OpenRouter",
+                key="sidebar_api_key"
+            )
+            
+            # Validation visuelle
+            if api_key:
+                if api_key.startswith("sk-or-"):
+                    st.success("✅ OpenRouter")
+                elif api_key.startswith("sk-proj-"):
+                    st.success("✅ OpenAI Project")
+                elif api_key.startswith("sk-"):
+                    st.success("✅ OpenAI")
+                else:
+                    st.info("🔑 Configurée")
+                
+                os.environ["OPENAI_API_KEY"] = api_key
+                st.session_state["api_key"] = api_key
+            else:
+                st.warning("⚠️ Clé manquante")
+            
+            st.divider()
+            
+            # Templates
+            st.markdown("### 📋 Template")
+            
+            templates = st.session_state.template_manager.list_templates()
+            
+            if templates:
+                options = ["Aucun"] + [t["name"] for t in templates]
+                selected_name = st.selectbox(
+                    "Template actif",
+                    options,
+                    index=0 if not st.session_state.selected_template else 
+                          next((i+1 for i, t in enumerate(templates) 
+                                if t["id"] == st.session_state.selected_template), 0),
+                    key="template_select_sidebar"
+                )
+                
+                if selected_name != "Aucun":
+                    template = next(t for t in templates if t["name"] == selected_name)
+                    st.session_state.selected_template = template["id"]
+                    st.session_state.use_template = True
+                    st.success(f"✅ {selected_name}")
+                else:
+                    st.session_state.selected_template = None
+                    st.session_state.use_template = False
+            
+            # Upload nouveau template
+            with st.expander("➕ Ajouter template"):
+                uploaded = st.file_uploader("Fichier Excel", type=["xlsx", "xls"], key="template_upload_sidebar")
+                if uploaded:
+                    name = st.text_input("Nom", value=Path(uploaded.name).stem, key="template_name_input")
+                    if st.button("💾 Sauvegarder", use_container_width=True, key="save_template_btn"):
+                        temp_path = Path("templates") / f"temp_{uploaded.name}"
+                        with open(temp_path, "wb") as f:
+                            f.write(uploaded.getbuffer())
+                        
+                        try:
+                            st.session_state.template_manager.add_template(
+                                str(temp_path),
+                                name=name,
+                                set_as_default=not templates
+                            )
+                            st.success(f"✅ {name} ajouté !")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ {e}")
+                        finally:
+                            if temp_path.exists():
+                                temp_path.unlink()
+        
+        with sidebar_tabs[2]:  # Logs
+            st.markdown("**Logs & Diagnostics**")
+            
+            try:
+                from src.logger_config import LoggerConfig
+                
+                log_file = LoggerConfig.LOG_FILE
+                if log_file.exists():
+                    with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+                        content = f.read()
+                    
+                    # Statistiques
+                    errors = content.count("ERROR")
+                    warnings_count = content.count("WARNING")
+                    infos = content.count("INFO")
+                    
+                    col_l1, col_l2, col_l3 = st.columns(3)
+                    with col_l1:
+                        st.metric("🔴 Erreurs", errors)
+                    with col_l2:
+                        st.metric("🟠 Warnings", warnings_count)
+                    with col_l3:
+                        st.metric("🟢 Infos", infos)
+                    
+                    st.divider()
+                    
+                    # Filtres
+                    col_filter1, col_filter2 = st.columns(2)
+                    with col_filter1:
+                        log_filter = st.selectbox(
+                            "🔍 Filtre",
+                            ["TOUS", "ERROR", "WARNING", "INFO", "DEBUG"],
+                            key="log_filter_sidebar"
                         )
-                        st.success(f"✅ {name} ajouté !")
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ {e}")
-                    finally:
-                        if temp_path.exists():
-                            temp_path.unlink()
+                    with col_filter2:
+                        log_lines = st.slider(
+                            "Lignes",
+                            5, 50, 20,
+                            key="log_lines_sidebar"
+                        )
+                    
+                    # Afficher les logs
+                    lines = content.split('\n')
+                    filtered_lines = []
+                    
+                    for line in reversed(lines):
+                        if log_filter == "TOUS" or log_filter in line:
+                            filtered_lines.append(line)
+                        if len(filtered_lines) >= log_lines:
+                            break
+                    
+                    if filtered_lines:
+                        st.caption(f"📄 Derniers {len(filtered_lines)} logs:")
+                        for line in reversed(filtered_lines):
+                            if line.strip():
+                                if "ERROR" in line:
+                                    st.write(f"🔴 {line[:80]}")
+                                elif "WARNING" in line:
+                                    st.write(f"🟠 {line[:80]}")
+                                else:
+                                    st.caption(line[:80])
+                    
+                    st.divider()
+                    
+                    # Actions
+                    col_log_action1, col_log_action2 = st.columns(2)
+                    with col_log_action1:
+                        if st.button("🔄 Rafraîchir", use_container_width=True, key="refresh_logs_btn"):
+                            st.rerun()
+                    with col_log_action2:
+                        st.download_button(
+                            label="📥 Télécharger",
+                            data=content,
+                            file_name=f"logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                            mime="text/plain",
+                            use_container_width=True
+                        )
+                else:
+                    st.info("ℹ️ Aucun log disponible")
+            except Exception as e:
+                st.error(f"❌ Erreur logs: {str(e)}")
         
         st.divider()
         
