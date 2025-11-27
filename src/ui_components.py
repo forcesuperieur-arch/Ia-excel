@@ -1833,11 +1833,35 @@ Description Motoblouz:"""
                         if not client_wrapper:
                             st.error("❌ Client IA non disponible")
                         else:
+                            # Déterminer le format et adapter le system prompt
+                            format_type = template_structure.get('format_type', 'plain')
+                            
+                            if format_type == 'html':
+                                system_prompt = """Tu es un rédacteur de catalogue professionnel pour Motoblouz spécialisé en formatage HTML.
+
+IMPÉRATIF ABSOLU: Tu dois générer EXACTEMENT du HTML avec:
+- <div>...</div> pour les blocs de texte
+- <span style="font-weight: bold;">texte important</span> pour les éléments clés
+- <ul><li>...</li></ul> pour les listes
+- <br> pour les sauts de ligne
+- Pas de Markdown (**texte**)
+
+Tu respectes:
+1. Le nombre de mots (±10%)
+2. La structure HTML exacte
+3. Les balises et styles fournis
+4. Les sections originales
+5. Tu n'inventes JAMAIS de contenu
+
+RÉSULTAT: HTML pur, prêt à afficher."""
+                            else:
+                                system_prompt = """Tu es un rédacteur de catalogue professionnel pour Motoblouz. Tu respectes EXACTEMENT le format fourni. Tu dois maintenir le même nombre de mots (±10%), les mêmes éléments de formatage (gras, puces, sections). Tu n'inventes JAMAIS de contenu. Tu es factuel et technique."""
+                            
                             generated = client_wrapper.generate(
                                 prompt=full_prompt,
-                                system="Tu es un rédacteur de catalogue professionnel pour Motoblouz. Tu respectes EXACTEMENT le format fourni. Tu dois maintenir le même nombre de mots (±10%), les mêmes éléments de formatage (gras, puces, sections). Tu n'inventes JAMAIS de contenu. Tu es factuel et technique.",
+                                system=system_prompt,
                                 temperature=0.6,
-                                max_tokens=500
+                                max_tokens=1000
                             )
                             
                             if not generated:
