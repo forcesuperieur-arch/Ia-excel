@@ -12,7 +12,9 @@ import time
 import signal
 from functools import wraps
 
-logger = logging.getLogger(__name__)
+# ✅ Utiliser le logger centralisé
+from .logger_config import LoggerConfig
+logger = LoggerConfig.get_logger(__name__)
 
 def timeout_handler(timeout_seconds=300):
     """Décorateur pour ajouter un timeout à une fonction"""
@@ -26,10 +28,13 @@ def timeout_handler(timeout_seconds=300):
                 result = func(*args, **kwargs)
                 elapsed = time.time() - start_time
                 logger.info(f"✓ {func.__name__} complété en {elapsed:.1f}s")
+                LoggerConfig.log_performance(func.__name__, elapsed, success=True)
                 return result
             except Exception as e:
                 elapsed = time.time() - start_time
                 logger.error(f"✗ {func.__name__} échoué après {elapsed:.1f}s: {str(e)}")
+                LoggerConfig.log_performance(func.__name__, elapsed, success=False, 
+                                            details={'error': str(e)})
                 raise
         return wrapper
     return decorator

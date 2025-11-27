@@ -774,27 +774,36 @@ def render_settings():
             st.success("Cache vidée.")
 
     st.divider()
-    st.markdown("### 📜 Logs Serveur")
-    st.caption("Consultez les logs pour le débogage.")
+    st.markdown("### 📊 Logs & Diagnostics")
     
-    if os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "r") as f:
-            # Lire les dernières lignes pour ne pas surcharger
-            lines = f.readlines()
-            last_lines = "".join(lines[-500:]) # 500 dernières lignes
-            
-        st.text_area("Derniers logs", last_lines, height=300, key="log_viewer")
-        
-        col_l1, col_l2 = st.columns(2)
-        with col_l1:
-            st.download_button("⬇️ Télécharger les logs complets", "".join(lines), "app.log", mime="text/plain", use_container_width=True)
-        with col_l2:
-            if st.button("🗑️ Effacer les logs", use_container_width=True):
-                with open(LOG_FILE, "w") as f:
-                    f.write(f"Log cleared at {datetime.now()}\n")
-                st.rerun()
-    else:
-        st.info("Aucun fichier de log trouvé.")
+    # Importer le viewer de logs
+    from src.logs_viewer import render_logs_statistics, render_logs_viewer
+    
+    # Onglets de logs
+    tab1, tab2, tab3 = st.tabs(["📈 Statistiques", "📋 Viewer", "📥 Téléchargement"])
+    
+    with tab1:
+        render_logs_statistics()
+    
+    with tab2:
+        render_logs_viewer()
+    
+    with tab3:
+        st.markdown("**Télécharger les logs complets**")
+        from src.logger_config import LoggerConfig
+        log_file = LoggerConfig.LOG_FILE
+        if log_file.exists():
+            with open(log_file, "r", encoding='utf-8', errors='ignore') as f:
+                content = f.read()
+            st.download_button(
+                label="📥 Télécharger tous les logs",
+                data=content,
+                file_name=f"logs_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                mime="text/plain",
+                use_container_width=True
+            )
+        else:
+            st.info("ℹ️ Aucun fichier de logs trouvé")
 
 
 

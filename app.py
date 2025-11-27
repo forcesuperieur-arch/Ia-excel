@@ -11,6 +11,11 @@ import os
 import warnings
 warnings.filterwarnings('ignore', category=FileNotFoundError)
 
+# ✅ Initialiser le logging AVANT tout
+from src.logger_config import LoggerConfig
+logger_config = LoggerConfig()
+logger = logger_config.get_logger(__name__)
+
 from src.ui_components import (
     load_css,
     init_session_state,
