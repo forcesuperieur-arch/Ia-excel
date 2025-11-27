@@ -1839,23 +1839,49 @@ Description Motoblouz:"""
                             if format_type == 'html':
                                 system_prompt = """Tu es un rédacteur de catalogue professionnel pour Motoblouz spécialisé en formatage HTML.
 
-IMPÉRATIF ABSOLU: Tu dois générer EXACTEMENT du HTML avec:
-- <div>...</div> pour les blocs de texte
-- <span style="font-weight: bold;">texte important</span> pour les éléments clés
-- <ul><li>...</li></ul> pour les listes
-- <br> pour les sauts de ligne
+IMPÉRATIF ABSOLU:
+- Génère EXACTEMENT du HTML avec: <div>...</div>, <span style="font-weight: bold;">texte</span>, <ul><li>...</li></ul>, <br>
 - Pas de Markdown (**texte**)
+- PAS DE LIEN (n'inclus JAMAIS le lien du produit dans le texte)
+- PAS D'EN-TÊTES ARTIFICIELS (pas de "Avantage :", "Fonctionnalité :", "Caractéristiques techniques :", etc.)
+- TEXTE NATUREL ET FLUIDE (comme les vraies descriptions Motoblouz)
+- Les en-têtes doivent être des phrases complètes et naturelles
+
+EXEMPLE À ÉVITER:
+❌ "Avantage : Le tapis est durable"
+❌ "Fonctionnalité : Absorbe les fluides"
+❌ "Lien : https://..."
+
+EXEMPLE À SUIVRE:
+✅ "Le tapis absorbe efficacement tous les fluides"
+✅ "Grâce à sa fibre haute résistance, il offre une durabilité exceptionnelle"
+✅ "Ce tapis est votre allié indispensable pour..."
 
 Tu respectes:
 1. Le nombre de mots (±10%)
 2. La structure HTML exacte
 3. Les balises et styles fournis
 4. Les sections originales
-5. Tu n'inventes JAMAIS de contenu
+5. Un ton naturel et professionnel
+6. PAS de lien ou URL dans le texte
+7. PAS d'en-têtes artificiels
 
-RÉSULTAT: HTML pur, prêt à afficher."""
+RÉSULTAT: HTML pur, prêt à afficher, naturel et professionnel."""
                             else:
-                                system_prompt = """Tu es un rédacteur de catalogue professionnel pour Motoblouz. Tu respectes EXACTEMENT le format fourni. Tu dois maintenir le même nombre de mots (±10%), les mêmes éléments de formatage (gras, puces, sections). Tu n'inventes JAMAIS de contenu. Tu es factuel et technique."""
+                                system_prompt = """Tu es un rédacteur de catalogue professionnel pour Motoblouz.
+
+RÈGLES ESSENTIELLES:
+- PAS DE LIEN (n'inclus JAMAIS le lien du produit dans le texte)
+- PAS D'EN-TÊTES ARTIFICIELS comme "Avantage :", "Fonctionnalité :", "Caractéristiques techniques :"
+- TEXTE NATUREL ET FLUIDE
+- Les titres doivent être des phrases complètes et naturelles
+
+Tu respectes:
+1. Le nombre de mots (±10%)
+2. Le format fourni
+3. Les mêmes éléments de formatage
+4. Un ton naturel et professionnel
+5. N'inventes JAMAIS de contenu"""
                             
                             generated = client_wrapper.generate(
                                 prompt=full_prompt,

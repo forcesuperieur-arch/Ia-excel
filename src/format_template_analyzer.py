@@ -185,12 +185,11 @@ class FormatTemplateAnalyzer:
                 title = section.get('title', f'Section {i}')
                 prompt += f"{i}. {title}\n"
         
-        if product_url:
-            prompt += f"\n🔗 RÉFÉRENCE PRODUIT: {product_url}"
+        # N'inclure que le nom du produit, PAS le lien
         if product_name:
-            prompt += f"\n📦 NOM PRODUIT: {product_name}"
+            prompt += f"\n📦 PRODUIT: {product_name}"
         
-        prompt += "\n\nRégénère maintenant la description en respectant EXACTEMENT ce format."
+        prompt += "\n\n⚠️ RÈGLES ESSENTIELLES:\n- PAS DE LIEN OU URL\n- PAS D'EN-TÊTES ARTIFICIELS (style \"Avantage :\", \"Fonctionnalité :\")\n- TEXTE NATUREL ET FLUIDE\n\nRégénère maintenant la description en respectant EXACTEMENT ce format."
         
         return prompt
     
