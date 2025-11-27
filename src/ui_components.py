@@ -1559,7 +1559,7 @@ def seo_testing_tab(config):
     # Mode sélection
     mode = st.radio(
         "Mode",
-        ["🤖 Générer avec IA", "📝 Coller une description existante"],
+        ["🤖 Générer avec IA", "📝 Coller une description existante", "🎨 Appliquer le format à un nouveau produit"],
         horizontal=True,
         key="seo_test_mode"
     )
@@ -1735,6 +1735,169 @@ Description Motoblouz:"""
                 if st.button("📋 Copier l'originale", use_container_width=True, key="copy_original"):
                     st.code(custom_description, language=None)
                     st.info("💡 Sélectionnez et copiez le texte ci-dessus")
+    
+    elif mode == "🎨 Appliquer le format à un nouveau produit":
+        """Mode: Charger un template de format et l'appliquer à un nouveau produit"""
+        st.markdown("### 🎨 Appliquer le format d'une description existante à un nouveau produit")
+        st.markdown("1. Collez une description **modèle** pour extraire son format")
+        st.markdown("2. Fournissez le lien ou la référence du **nouveau produit**")
+        st.markdown("3. L'IA génèrera la nouvelle description avec la même structure")
+        
+        col_template, col_new = st.columns(2)
+        
+        with col_template:
+            st.markdown("#### 📋 Description Modèle")
+            template_description = st.text_area(
+                "Collez une description existante",
+                "",
+                height=250,
+                key="seo_template_desc",
+                placeholder="Collez votre description modèle ici..."
+            )
+            
+            if template_description:
+                # Analyser le template
+                from src.format_template_analyzer import FormatTemplateAnalyzer
+                analyzer = FormatTemplateAnalyzer()
+                template_structure = analyzer.analyze_structure(template_description)
+                
+                st.markdown("**📊 Structure du modèle:**")
+                col_t1, col_t2 = st.columns(2)
+                with col_t1:
+                    st.metric("Mots", template_structure['total_words'])
+                    st.metric("Phrases", template_structure['total_sentences'])
+                with col_t2:
+                    st.metric("Lignes", template_structure['total_lines'])
+                    st.metric("Caractères", template_structure['total_chars'])
+                
+                # Afficher les éléments de format
+                if template_structure['format_elements']:
+                    st.markdown("**🎨 Éléments de formatage détectés:**")
+                    for elem in template_structure['format_elements']:
+                        st.caption(f"• {elem.replace('_', ' ').title()}")
+                
+                st.session_state.template_structure = template_structure
+        
+        with col_new:
+            st.markdown("#### 📦 Nouveau Produit")
+            
+            new_product_url = st.text_input(
+                "Lien ou référence du produit",
+                "",
+                key="seo_new_product_url",
+                placeholder="https://example.com/product ou REFERENCE123"
+            )
+            
+            new_product_name = st.text_input(
+                "Nom du produit",
+                "",
+                key="seo_new_product_name",
+                placeholder="Ex: Silencieux Paris-Dakar pour Yamaha XT 600"
+            )
+            
+            new_product_description = st.text_area(
+                "Informations sur le produit (optionnel)",
+                "",
+                height=200,
+                key="seo_new_product_desc",
+                placeholder="Caractéristiques techniques, matériaux, utilisations..."
+            )
+        
+        st.divider()
+        
+        if template_description and new_product_url:
+            if st.button("✨ Générer avec le même format", type="primary", use_container_width=True, key="apply_format_btn"):
+                with st.spinner("🤖 Génération en cours..."):
+                    try:
+                        from src.format_template_analyzer import FormatTemplateAnalyzer
+                        from src.ai_client_factory import AIClientFactory
+                        
+                        analyzer = FormatTemplateAnalyzer()
+                        template_structure = st.session_state.get('template_structure', analyzer.analyze_structure(template_description))
+                        
+                        # Générer le prompt
+                        format_prompt = analyzer.generate_format_prompt(
+                            template_structure,
+                            product_url=new_product_url,
+                            product_name=new_product_name
+                        )
+                        
+                        # Ajouter les informations du produit
+                        full_prompt = format_prompt + f"\n\nProduit: {new_product_name}\nLien: {new_product_url}"
+                        if new_product_description:
+                            full_prompt += f"\n\nInformations supplémentaires:\n{new_product_description}"
+                        
+                        # Utiliser l'IA pour générer
+                        client_wrapper = AIClientFactory.get_client(provider="openai")
+                        
+                        if not client_wrapper:
+                            st.error("❌ Client IA non disponible")
+                        else:
+                            generated = client_wrapper.generate(
+                                prompt=full_prompt,
+                                system="Tu es un rédacteur de catalogue professionnel pour Motoblouz. Tu respectes EXACTEMENT le format fourni. Tu dois maintenir le même nombre de mots (±10%), les mêmes éléments de formatage (gras, puces, sections). Tu n'inventes JAMAIS de contenu. Tu es factuel et technique.",
+                                temperature=0.6,
+                                max_tokens=500
+                            )
+                            
+                            if not generated:
+                                st.error("❌ Réponse vide de l'IA")
+                            else:
+                                st.success("✅ Description générée avec le même format !")
+                                
+                                # Comparer les structures
+                                comparison = analyzer.compare_structures(template_description, generated)
+                                
+                                # Afficher le score de conformité
+                                col_score1, col_score2, col_score3 = st.columns(3)
+                                
+                                with col_score1:
+                                    compliance_score = comparison['format_compliance_score']
+                                    color = "green" if compliance_score > 80 else "orange" if compliance_score > 60 else "red"
+                                    st.metric(
+                                        "Score de conformité",
+                                        f"{compliance_score:.0f}%",
+                                        delta=f"{compliance_score - 50:.0f}%" if compliance_score > 50 else None
+                                    )
+                                
+                                with col_score2:
+                                    word_diff = comparison['word_count_diff']
+                                    word_percent = comparison['word_count_percent']
+                                    st.metric("Différence mots", f"{word_diff} ({word_percent:.1f}%)")
+                                
+                                with col_score3:
+                                    match_count = sum(1 for v in comparison['format_match'].values() if v)
+                                    st.metric("Format respecté", f"{match_count}/4")
+                                
+                                # Afficher les recommandations
+                                st.markdown("### 📋 Vérification du format")
+                                for rec in comparison['recommendations']:
+                                    if rec.startswith("✅"):
+                                        st.success(rec)
+                                    elif rec.startswith("❌"):
+                                        st.warning(rec)
+                                
+                                st.divider()
+                                
+                                # Affichage comparatif
+                                col_modele, col_gen = st.columns(2)
+                                
+                                with col_modele:
+                                    st.markdown("### 📄 Modèle")
+                                    st.text_area("Description modèle", template_description, height=300, disabled=True, label_visibility="collapsed", key="model_display")
+                                
+                                with col_gen:
+                                    st.markdown("### ✨ Nouvelle Description")
+                                    st.markdown(generated, unsafe_allow_html=True)
+                                
+                                st.divider()
+                                st.markdown("### 📋 Copier la nouvelle version")
+                                st.code(generated, language=None)
+                                st.info("💡 Sélectionnez et copiez le texte ci-dessus (Ctrl+C)")
+                    
+                    except Exception as e:
+                        st.error(f"❌ Erreur: {str(e)}")
+                        logger.error(f"Format template error: {str(e)}")
     
     else:
         # Mode génération IA
