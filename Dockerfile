@@ -4,16 +4,18 @@ FROM python:3.12-slim
 # Définir le répertoire de travail
 WORKDIR /app
 
-# Installer les dépendances système (minimales)
+# Installer les dépendances système (minimales pour PyTorch, psycopg2)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    g++ \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Copier les requirements
-COPY requirements.txt .
+# Copier les requirements Cloud Run
+COPY requirements-gcloud.txt .
 
 # Installer les dépendances Python avec cache
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements-gcloud.txt
 
 # Copier le reste de l'application
 COPY . .
