@@ -26,6 +26,12 @@ class LoggerConfig:
         """Configure le logging avec rotation et formatage professionnel"""
         self.LOG_DIR.mkdir(exist_ok=True)
         
+        # Supprimer les logs DEBUG inutiles de libraries tierces
+        logging.getLogger("watchdog").setLevel(logging.WARNING)
+        logging.getLogger("streamlit").setLevel(logging.WARNING)
+        logging.getLogger("urllib3").setLevel(logging.WARNING)
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
+        
         # Format détaillé pour les fichiers
         file_formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s',
@@ -44,7 +50,7 @@ class LoggerConfig:
             backupCount=7
         )
         file_handler.setFormatter(file_formatter)
-        file_handler.setLevel(logging.DEBUG)
+        file_handler.setLevel(logging.INFO)  # INFO seulement (pas DEBUG)
         
         # Handler console (seulement INFO et plus)
         console_handler = logging.StreamHandler()
@@ -53,7 +59,7 @@ class LoggerConfig:
         
         # Logger root
         root_logger = logging.getLogger()
-        root_logger.setLevel(logging.DEBUG)
+        root_logger.setLevel(logging.INFO)  # INFO seulement
         root_logger.addHandler(file_handler)
         root_logger.addHandler(console_handler)
         
